@@ -1,0 +1,655 @@
+/* fixing jquery ui slider */
+
+.sliderContainer {
+  width: 248px;
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid #c5c5c5;
+}
+
+.ui-slider {
+  width: 208px;
+  border: none !important;
+}
+
+.ui-slider, .ui-slider .ui-slider-handle {
+  height: 28px;
+}
+
+.ui-slider .ui-slider-handle {
+  margin-left: -1px;
+  top: -1px;
+  line-height: 26px;
+  width: 40px;
+  text-align: center;
+  background: #023b1f;
+  color: white;
+}
+
+.ui-slider .ui-slider-handle:hover {
+  background: #056e3a !important;
+  color: white !important;
+}
+
+.ui-slider .ui-slider-handle.ui-state-active {
+  background: #056e3a !important;
+  color: white !important;
+  border-color: #067e43 !important;
+}
+
+/* done fixing jquery ui slider */
+
+body {
+    background: #0d1033;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  }
+
+#dropzoneContainer, #dropzone {
+  position: fixed;
+  display: none;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 100;
+}
+  
+  #app {
+    position: relative;
+    background: #0d1033;
+    color: #fff;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    margin: auto;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100vh;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: top;
+  }
+
+.flexRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+}
+
+.flexCol {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+}
+  
+#mainPanel {
+  position: relative;
+  box-sizing: border-box;
+  padding: 6px;
+  flex-grow: 1;
+}
+  
+  #footer {
+    color: #eee;
+    width: 100%;
+    font-size: 12px;
+    background: #080c1e;
+    box-sizing: border-box;
+    padding: 6px;
+    flex-shrink: 0;
+  }
+
+#focusPanel {
+  margin-top: 75px;
+}
+
+  #title {
+    font-size: 30px;
+    text-align: center;
+    border-bottom: 1px solid #fff;
+    padding-bottom: 15px;
+  }
+  
+  #word {  
+    font-size: 70px;
+    font-family: "Times New Roman", "serif";
+  }
+  
+  #translation {
+    font-size: 60px;
+    font-style: italic;
+    font-family: "Times New Roman", "serif";
+  }
+  
+  a {
+    color: #0adcff;
+  }
+  
+  @media (max-width: 779px) {  
+    #title {
+      font-size: 20px;
+    }
+    
+    #word {  
+      font-size: 60px;
+    }
+   
+    #translation {
+      font-size: 40px;
+    }
+    
+    .control {
+      font-size: 15px;
+    }
+  }
+  
+  #word, #translation {
+    text-align: center;
+    margin: 2vw 0 4vw 0;
+    height: 12vh;
+    display: block;
+  }
+  
+  #info {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  #infoCount, #infoDenom {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+  }
+  
+  #infoCount {
+    text-align: right;
+    width: 35px;
+  }
+  
+  #infoDenom {
+    text-align: left;
+  }
+  
+  #controls {
+    border-top: 1px solid #fff;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    max-height: 60vh;
+  /*   border: 1px solid #fff; */
+    border-radius: 5px;
+    padding: 10px;
+    padding-top: 20px;
+    margin: auto;
+  }
+  
+  .control {
+    display: inline-block;
+    height: 70px;
+    width: auto;
+    min-width: 10vw;
+    margin: 10px;
+    border-radius: 7px;
+    box-shadow: 5px 5px #000;
+    font-size: 20px;
+    font-weight: normal;
+    padding: 10px;
+  }
+
+.buttonBase {
+  background: none;
+  border: 1px solid #fff;
+  border-radius: 5px;
+  color: #fff;
+  min-height: 30px;
+  cursor: pointer;
+}
+
+.buttonBase.buttonDark {
+  color: #222;
+  border-color: #222;
+}
+
+
+  .buttonEffects:hover {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  .buttonEffects:active {
+    background: #aaa !important;
+    color: #111 !important;
+  }
+
+.buttonEffects.buttonDark:hover {
+  background: #222 !important;
+  color: #fff !important;
+}
+
+.buttonEffects.buttonDark:active {
+  background: #555 !important;
+  color: #fff !important;
+}
+
+  .buttonEffects:disabled {
+    color: #ddd !important;
+    border: 1px solid #ddd !important;
+    cursor: default !important;
+    filter: brightness(0.65) !important;
+  }
+  
+  .buttonEffects:disabled:hover, .buttonEffects:disabled:active {
+    background: none !important;
+    color: #ddd !important;
+  }
+  
+  #footerContent {
+    padding: 15px 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+  
+  .footerBlock {
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+  }
+  
+  .footerBlock > div {  
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 20px;
+  }
+  
+  /* me again */
+  .hide {
+    visibility: hidden;
+    display: none;
+  }
+  
+  .buttonFooter {
+    padding: 5px 10px;
+    margin-right: 10px;
+  }
+
+  
+  #sourceContainer {
+    margin-right: 15px;
+  }
+  
+  #nextMessage {
+    font-style: italic;
+    font-size: 18px;
+    display: block;
+    position: relative;
+    top: 100%;
+  }
+
+/* All share stuff */
+
+#shareContent {
+  gap: 10px;
+  padding: 10px 0;
+  box-sizing: border-box;
+}
+
+#shareURLLabel {
+  position: relative;
+  height: 30px;
+  line-height: 40px;
+  font-size: 14px;
+}
+
+#shareURL {
+  width: 30%;
+  overflow-x: scroll;
+  height: 30px;
+}
+
+#shareContent button {
+  height: 35px;
+  padding: 0 10px;
+}
+
+.flexRowCenter {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;  
+}
+  
+.fullPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+  color: #fff;
+}
+
+.overlayPanel {
+  background: #080c1e;  
+}
+
+.verticalPanel {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;  
+}
+
+.horizontalPanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+}
+
+.panelContent {
+  width: 95%;
+  display: flex;
+  flex-direction: column;
+  justify-content: top;
+  text-align: center;  
+}
+
+.fullPanel h1, #titlePanel h1 {
+  font-size: 40px;
+}
+
+#helpContent p {
+  font-size: 1.2em;
+}
+
+.textDark {
+  color: #222;
+}
+
+.textDark a {
+  color: #0d1033;
+}
+
+hr {
+  width: 100%;
+  border-bottom: 1px solid white;
+}
+
+#copyPingNotification {
+  /* new */
+  position: absolute;
+  
+  z-index: 99;
+  font-style: italic;
+  padding: 10px;
+  pointer-events: none;
+  width: 75px;
+  border-radius: 25px;
+}
+
+#copyPingNotification.pinged {  
+  /* new */
+  background: rgba(255,255,255, 1); */
+  color: #000;
+  
+/*   background: rgba(255,255,255, 0.5); */
+/*   color: rgba(255, 255, 255, 1); */
+}
+
+#copyPingNotification:not(.pinged) {  
+  background: rgba(255,255,255, 0);
+  color: rgba(255, 255, 255, 0);
+}
+
+.fade {  
+  transition-duration: 1s;
+  transition-timing-function: linear;
+}
+
+.optionsRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+.optionsCol {
+  display: flex;
+  flex-direction: column;
+  justify-content: top;
+  flex-grow: 1;
+  flex-shrink: 1;
+  margin: 0 15px;
+}
+
+.optionsCol label {
+  margin-bottom: 20px;
+}
+
+.cardPanel {
+  position: relative;
+}
+
+.hider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  z-index: 11;
+  background: #0d1033;
+  line-height: 80px;
+  font-style: italic;
+  font-size: 21px;
+  margin: 0;
+}
+
+#wordHider, #translationHider {
+  font-size: 40px;
+  font-family: "Times New Roman", serif;
+}
+
+#focusPanel {
+  position: relative;
+}
+
+#toBeginPanel {
+  font-size: 18px;
+  z-index: 12;
+}
+
+#toBeginPanel h2 {
+  margin: none;
+  margin-top: 80px;
+}
+
+.ui-checkboxradio-label {
+  background: #eee;
+  color: #111;
+}
+
+.ui-checkboxradio-label .ui-checkboxradio-icon {
+  border: 1px solid #aaa;
+}
+
+.ui-checkboxradio-label.ui-checkboxradio-checked {
+  background: #023b1f;
+  border-color: #067e43;
+  color: white;
+}
+
+.ui-checkboxradio-label:hover {
+  background: #ccc !important;
+  color: #222 !important;
+  border-color: #067e43 !important;
+}
+
+.ui-checkboxradio-label.ui-checkboxradio-checked:hover {
+  background: #143023 !important;
+  color: #fff !important;
+  
+}
+
+#optionsPanel h2 {
+  margin-top: -10px;
+}
+
+#optionsPanel .sample {
+  margin-bottom: 10px;
+}
+
+#optionsPanel select {
+  height: 30px;
+}
+
+#optionsPanel select {
+  text-align: center;
+ text-align-last: center;
+}
+
+#btnSetDefaultOptions {
+  width: 15%;
+  margin: auto;
+  height: 40px;
+  font-size: 15px;
+}
+
+.optLabelPlusOption {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.optLabelPlusOption label  {
+  flex-grow: 20;
+  margin-bottom: 0;
+  text-align: left;
+  position: relative;
+  top: 20%;
+}
+
+.optLabelPlusOption select {
+  margin-top: 0;
+  flex-grow: 80;
+  max-width: 250px;
+}
+
+.optLabelPlusOption .ui-slider, .optLabelPlusOption select {
+  flex-grow: 80;
+}
+
+.optLabelPlusOption label, .optLabelPlusOption label div {  
+  word-wrap: normal;
+}
+
+#labelVolume {
+  flex-grow: 5;
+}
+
+input[disabled=""] {
+  background: #cccccc;
+  color: #222222;
+  font-style: italic;
+}
+
+/* Editor */
+
+#editPanel {
+/*   background: #111; */
+}
+
+#editorContent {
+  text-align: center;
+  width: 95%;
+}
+
+#editSubPanel {
+  gap: 3.3%;
+}
+
+#editSubPanel > div {
+  width: 30%;
+/*   border: 1px solid #eee; */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+#editItemsList {  
+  max-height: 40vh;
+  overflow-y: scroll;
+}
+
+.editMetaItem label {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 5px 0;
+}
+
+.editMetaItemLabel {
+  width: 30%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: right;
+}
+
+.editMetaItem input {
+  width: 63%;
+  height: 30px;
+}
+
+.editMetaItem select, .editMetaItem option {
+  width: 65%;
+  height: 30px;
+}
+
+
+#editRaw {
+  width: 100%;
+  height: 40vh;
+  resize: none;
+}
+
+#editItemsList {
+  gap: 10px;
+}
+
+.editItem input {
+  width: 40%;
+}
+
+.editItem {
+  justify-content: space-between;
+}
+
+#editItem-Add {
+  flex-direction: row-reverse;
+}
+
+.btnEditDeleteItem, .btnEditAddItem {
+  width: 30px;
+}
+
+.editSectionHeading {
+  margin-bottom: 10px;
+}
+
+.editClearButton .fa {
+  margin-right: 5px;
+}
+
+#editUniversalControlPanel .editSectionButtons {
+  justify-content: center;
+  gap: 10px;
+}
+
+#editContent {
+  margin-top: 10px;
+}
