@@ -238,7 +238,7 @@ const receiveUploadedContent = (content, path) => {
   filename = path.split("\\").pop().split("/").pop().toLowerCase();
   data = parseData(content, path);
 
-  if (data.sourceURL == "") {
+  if (data.sourceURL === "") {
     data.sourceURL = "#";
   }
   
@@ -299,7 +299,7 @@ const _parseCSVlike = (content, delim) => {
       continue;
     }
 
-    line = line.trim(); // TODO better way to do this?
+    line = line.trim();
 
     if (line.startsWith(`"`) && line.endsWith(`"`)) {
       pieces = breakPieces(line, delim);
@@ -359,7 +359,7 @@ const detectDelimiter = (
     return firstLine.split("=")[1];
   }
 
-  if (blacklist == []) {
+  if (blacklist.length === 0) {
     blacklist = "abcdefghijklmnopqrstuvwxyz";
     blacklist += blacklist.toUpperCase();
     blacklist += "0123456789.";
@@ -428,7 +428,8 @@ const detectDelimiter = (
 
   // return the one with the most occurrences
   if (Object.keys(candidates).length === 0) {
-    console.log("Could not find any candidate delimiters....");
+    // console.log("Could not find any candidate delimiters....");
+    true; //
   } else {
     return Object.keys(candidates).reduce((a, b) =>
       candidates[a] > candidates[b] ? a : b
@@ -1045,7 +1046,6 @@ const makeUtterance = (text, voiceName, rate) => {
   if (optSilentAlternatives.value()) {
     let re = /\/.*/i;
     text = text.replace(re, "");
-    console.log(text);
   }
   
   let utterance = new SpeechSynthesisUtterance(text);
