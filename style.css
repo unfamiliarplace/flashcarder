@@ -68,7 +68,7 @@ body {
     border-radius: 15px;
     display: flex;
     flex-direction: column;
-    justify-content: top;
+    justify-content: start;
   }
 
 .flexRow {
@@ -350,7 +350,7 @@ body {
   width: 95%;
   display: flex;
   flex-direction: column;
-  justify-content: top;
+  justify-content: start;
   text-align: center;  
 }
 
@@ -389,7 +389,7 @@ hr {
 
 #copyPingNotification.pinged {  
   /* new */
-  background: rgba(255,255,255, 1); */
+  background: rgba(255,255,255, 1);
   color: #000;
   
 /*   background: rgba(255,255,255, 0.5); */
@@ -416,7 +416,7 @@ hr {
 .optionsCol {
   display: flex;
   flex-direction: column;
-  justify-content: top;
+  justify-content: start;
   flex-grow: 1;
   flex-shrink: 1;
   margin: 0 15px;
@@ -463,8 +463,7 @@ hr {
 }
 
 #toBeginPanel h2 {
-  margin: none;
-  margin-top: 80px;
+  margin: 80px 0 0;
 }
 
 .ui-checkboxradio-label {
@@ -593,7 +592,6 @@ input[disabled=""] {
 
 .editMetaItemLabel {
   width: 30%;
-  text-align: left;
   display: flex;
   flex-direction: column;
   justify-content: center;

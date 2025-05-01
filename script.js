@@ -48,9 +48,11 @@ let languagePrompts = defaultLanguagePrompts;
 let languageAnswers = defaultLanguageAnswers;
 
 let currentDictionary = {};
+let currentDictionaryOrder = [];
+let currentDictionaryIndex = 0;
+
 let word = "";
 let translation = "";
-let n = 0;
 let denom = 2;
 
 let optVolume = null;
@@ -79,25 +81,25 @@ const restartDictionary = () => {
   if (optInvertDictionary.value()) {
     currentDictionary = swapObjectKeys(currentDictionary);
   }
-};
 
-const next = () => {
-  if (stage.hiding("game") || !canNext()) {
-    return;
+  currentDictionaryOrder = [];
+  for (let i = 0; i < Object.keys(currentDictionary).length; i++) {
+    currentDictionaryOrder.push(i);
   }
-
-  $("#toBeginPanel").addClass("hide");
-
-  keys = Object.keys(currentDictionary);
 
   if (optRandomizeOrder.value()) {
-    word = keys[Math.floor(Math.random() * keys.length)];
-  } else {
-    word = keys[0];
+    currentDictionaryOrder = Tools.shuffle(currentDictionaryOrder);
   }
 
+  currentDictionaryIndex = -1;
+};
+
+const updateWordShown = () => {
+  let i = currentDictionaryOrder[currentDictionaryIndex];
+
+  keys = Object.keys(currentDictionary);
+  word = keys[i];
   translation = currentDictionary[word];
-  delete currentDictionary[word];
 
   $("#word").html(word);
   $("#translation").html(translation);
@@ -115,6 +117,7 @@ const next = () => {
     $("#word").addClass("hide");
     $("#wordHider").removeClass("hide");
   }
+
   if (optTextAnswerNext.value()) {
     $("#translation").removeClass("hide");
     $("#translationHider").addClass("hide");
@@ -123,13 +126,33 @@ const next = () => {
     $("#translationHider").removeClass("hide");
   }
 
-  n += 1;
-  $("#infoCount").html(n);
+  $("#infoCount").html(currentDictionaryIndex + 1);
+  checkAndToggleControls();
+}
 
-  toggleControl($("#btnNext"), canNext());
-  toggleControl($("#btnReveal"), canReveal());
-  toggleControl($("#btnRestart"), canRestart());
+const next = () => {
+  if (stage.hiding("game") || !canNext()) {
+    return;
+  }
+
+  currentDictionaryIndex++;
+  updateWordShown();
+
+  $("#toBeginPanel").addClass("hide");
 };
+
+const previous = () => {
+  if (stage.hiding("game") || !canPrevious()) {
+    return;
+  }
+
+  currentDictionaryIndex--;
+  updateWordShown();
+
+  if (currentDictionaryIndex === -1) {
+    $("#toBeginPanel").removeClass("hide");
+  }
+}
 
 const reveal = () => {
   if (stage.hiding("game") || !canReveal()) {
@@ -161,9 +184,7 @@ const reveal = () => {
 };
 
 const restart = (force = false) => {
-  if (!canRestart) {
-    return;
-  } else if (stage.hiding("game") && !force) {
+  if ((stage.hiding("game") && !force) || !canRestart()) {
     return;
   }
 
@@ -171,20 +192,21 @@ const restart = (force = false) => {
 
   speech.cancel();
 
-  toggleControl($("#btnNext"), true);
-  toggleControl($("#btnReveal"), false);
-  toggleControl($("#btnRestart"), false);
   restartDictionary();
+  checkAndToggleControls();
 
-  n = 0;
-  $("#infoCount").html(n);
+  $("#infoCount").html(0);
   $("#word").html("");
   $("#translation").html("");
 };
 
 const canNext = () => {
-  return Object.keys(currentDictionary).length > 0;
+  return currentDictionaryIndex < (currentDictionaryOrder.length - 1);
 };
+
+const canPrevious = () => {
+  return currentDictionaryIndex > -1;
+}
 
 const canReveal = () => {
   if (optTextPromptNext.value() && optTextAnswerNext.value()) {
@@ -192,14 +214,21 @@ const canReveal = () => {
   } else {
     return (
       $("#translation").hasClass("hide") &&
-      Object.keys(currentDictionary).length < Object.keys(dictionary).length
+      (currentDictionaryIndex > -1)
     );
   }
 };
 
 const canRestart = () => {
-  return Object.keys(currentDictionary).length < Object.keys(dictionary).length;
+  return canPrevious();
 };
+
+const checkAndToggleControls = () => {
+  toggleControl($("#btnNext"), canNext());
+  toggleControl($("#btnPrevious"), canPrevious());
+  toggleControl($("#btnReveal"), canReveal());
+  toggleControl($("#btnRestart"), canRestart());
+}
 
 const upload = () => {
   $("#btnUpload").click();
@@ -219,7 +248,7 @@ const receiveUploadedContent = (content, path) => {
 
   setData(data.dictionary, data.title, data.source, data.sourceURL);
   setLanguageData(data.languagePrompts, data.languageAnswers);
-  toggleControl($("#btn"), true);
+  toggleControl($("#btnReset"), true);
 };
 
 const parseData = (content, path) => {
@@ -433,6 +462,10 @@ const handleKeyup = (e) => {
       next();
       break;
 
+    case "KeyP":
+      previous();
+      break;
+
     case "KeyR":
       reveal();
       break;
@@ -513,13 +546,14 @@ const setDictionary = (_dictionary) => {
   dictionary = JSON.parse(JSON.stringify(_dictionary));
   restartDictionary();
 
-  denom = Object.keys(dictionary).length;
+  denom = currentDictionaryOrder.length;
   $("#infoDenom").text(denom);
 };
 
 const setTitle = (_title, _source) => {
   title = !!_title ? _title : !!_source ? _source : "";
-  $("#title").html(!!title ? title : "Unknown Flashcard Deck");
+  title = !!title ? title : "Unknown Flashcard Deck"; // lol
+  $("#title").html(title);
 };
 
 const setSource = (_title, _source, _URL) => {
@@ -1480,6 +1514,7 @@ const formatTXT = (data) => {
 
 const bind = () => {
   $("#btnNext").click(next);
+  $("#btnPrevious").click(previous);
   $("#btnReveal").click(reveal);
   $("#btnRestart").click(restart);
   $("#btnReset").click(reset);
