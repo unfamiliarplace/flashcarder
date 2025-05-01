@@ -454,7 +454,7 @@ const reset = () => {
 const handleKeyup = (e) => {
       
   let tag = document.activeElement.tagName;
-  if (["input", "textarea"].includes(tag.toLowerCase()) && (e.code != "Escape")) {
+  if (["input", "textarea"].includes(tag.toLowerCase()) && (e.code !== "Escape")) {
     return;
   }
   
@@ -531,16 +531,8 @@ const toggleControl = (control, enable) => {
   control.prop("disabled", !enable);
 };
 
-const restoreControl = (control) => {
-  control.prop("disabled", !wasControlEnabled(control));
-};
-
 const isControlEnabled = (control) => {
   return !control.prop("disabled");
-};
-
-const wasControlEnabled = (control) => {
-  return control.prop("wasEnabled");
 };
 
 const setDictionary = (_dictionary) => {
@@ -660,11 +652,6 @@ const populateEditorMeta = () => {
   populateEditorLanguages();
 }
 
-const populateEditorDictionary = () => {
-  populateEditorItems();
-  populateEditorRaw();
-}
-
 const formatEditorItem = (i, key, val) => {
   return `<div class='editItem editItemContent flexRow' id='editItem-${i}'><input class='editItemInput editItemPrompt' value='${key}'><input class='editItemInput editItemAnswer' value='${val}'><button class='btnEditDeleteItem buttonBase buttonEffects' id='btnEditDeleteItem-${i}' title='Delete this item'>-</button></div>`;
 }
@@ -708,11 +695,6 @@ const populateEditorRaw = () => {
   }
   
   $('#editRaw').val(raw.trim());
-}
-
-const populateEditor = () => {
-  populateEditorMeta();
-  populateEditorDictionary();
 }
 
 const shareURLIsValid = () => {
@@ -805,16 +787,16 @@ const compileSaveData = () => {
 
   if (
     $("#optLanguagePrompts").val() &&
-    $("#optLanguagePrompts").val() != "--" &&
-    $("#optLanguagePrompts").val() != defaultLanguagePrompts
+    $("#optLanguagePrompts").val() !== "--" &&
+    $("#optLanguagePrompts").val() !== defaultLanguagePrompts
   ) {
     _data["languagePrompts"] = $("#optLanguagePrompts").val();
   }
 
   if (
     $("#optLanguageAnswers").val() &&
-    $("#optLanguageAnswers").val() != "--" &&
-    $("#optLanguageAnswers").val() != defaultLanguageAnswers
+    $("#optLanguageAnswers").val() !== "--" &&
+    $("#optLanguageAnswers").val() !== defaultLanguageAnswers
   ) {
     _data["languageAnswers"] = $("#optLanguageAnswers").val();
   }
@@ -1219,7 +1201,7 @@ const editMetaField = () => {
   let _title = $('#editTitle').val().trim();
   let _sourceURL = $('#editURL').val().trim();
   
-  if (_sourceURL == "") {
+  if (_sourceURL === "") {
     _sourceURL = "#";
   }
   
@@ -1241,11 +1223,11 @@ const editItemField = () => {
   let els = $('.editItemContent');
   let key, val;
   
-  els.each(function (i) {
+  els.each(function () {
     key = $(this).find('.editItemPrompt').val().trim();  
     val = $(this).find('.editItemAnswer').val().trim();
     
-    if ((key != "") && (val != "")) {
+    if ((key !== "") && (val !== "")) {
       newDictionary[key] = val;  
     }    
   });
@@ -1259,15 +1241,12 @@ const editRawField = () => {
   let parsed = parseTXT(raw);
   
   let newDictionary = parsed['dictionary'];
-  let newDelimiter = parsed['delimiter'];
+  // let newDelimiter = parsed['delimiter'];
   
   setRestartData(newDictionary, false, true);
   toggleControl($("#btnReset"), true);
 }
 
-const editSetDefaults = () => {
-  reset();
-}
 
 const editClearAll = () => {
   editClearMeta();
@@ -1370,7 +1349,7 @@ const formatFilename = (data, ext) => {
 
   // sanitization characters
   // https://gist.github.com/barbietunnie/7bc6d48a424446c44ff4
-  let illegalRe = /[\/\?<>\\:\*\|":]/g;
+  let illegalRe = /[\/\?<>\\:\*\|"]/g;
   let controlRe = /[\x00-\x1f\x80-\x9f]/g;
   let reservedRe = /^\.+$/;
   let windowsReservedRe = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
