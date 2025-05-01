@@ -1567,7 +1567,13 @@ const bind = () => {
   speechSynthesis.onvoiceschanged = updateVoiceOptions;
 };
 
+const updateCopyright = () => {
+  $('#copyrightYear').text(new Date().getFullYear());
+}
+
 const initialize = () => {
+  updateCopyright();
+
   createDynamicOptions();
 
   createUploadButton();
