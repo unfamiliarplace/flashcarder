@@ -862,22 +862,7 @@ const copyShareURL = () => {
     return;
   }
 
-  let val = $("#shareURL").val();
-  Copy.writeToClipboard(val);
-  // Copy.ping($("#copyPingNotification"));
-  
-  if (copyToast !== null) {
-    copyToast.reset();  
-  }  
-  
-  copyToast = $.toast({
-    text: 'Copied!',
-    icon: 'success',
-    hideAfter: 2000,
-    showHideTransition: 'slide',
-    position: 'bottom-center',
-    loaderBg: '#ffffff'
-})
+  copyToast = Copy.toast(copyToast,  $("#shareURL").val(), 'Copied share URL!');
 };
 
 const updateVoiceLanguages = () => {
