@@ -79,7 +79,7 @@ const speech = window.speechSynthesis;
 const restartDictionary = () => {
   currentDictionary = JSON.parse(JSON.stringify(dictionary));
   if (optInvertDictionary.value()) {
-    currentDictionary = swapObjectKeys(currentDictionary);
+    currentDictionary = Tools.swapObjectKeys(currentDictionary);
   }
 
   currentDictionaryOrder = [];
@@ -748,26 +748,6 @@ const readDataFromURL = () => {
   setData(_d, _t, _s, _u);
 };
 
-// lol utility
-const renameObjectKeys = (o, remapping) => {
-  for (const [oldK, newK] of Object.entries(remapping)) {
-    //o[newK] = o[oldK];
-
-    if (oldK in o) {
-      Object.defineProperty(o, newK, Object.getOwnPropertyDescriptor(o, oldK));
-
-      delete o[oldK];
-    }
-  }
-};
-
-const swapObjectKeys = (o) => {
-  return Object.keys(o).reduce((o2, key) => {
-    o2[o[key]] = key;
-    return o2;
-  }, {});
-};
-
 const compileSaveData = () => {
   let _data = {};
 
@@ -837,7 +817,7 @@ const formatURLParams = () => {
 
   // shorten keys
 
-  renameObjectKeys(_data, {
+  Tools.renameObjectKeys(_data, {
     dictionary: "d",
     sourceURL: "u",
     title: "t",
