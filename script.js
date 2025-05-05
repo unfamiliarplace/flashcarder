@@ -247,7 +247,11 @@ const receiveUploadedContent = (content, path) => {
   }
 
   setData(data.dictionary, data.title, data.source, data.sourceURL);
-  setLanguageData(data.languagePrompts, data.languageAnswers);
+
+  // if (data.languagePrompts || data.languageAnswers) {
+    setLanguageData(data.languagePrompts, data.languageAnswers);
+  // }
+
   toggleControl($("#btnReset"), true);
 };
 
@@ -610,9 +614,7 @@ const setRestartData = (_dictionary, skipEditorItems, skipEditorRaw) => {
   toggleControl($("#btnShare"), true);
 }
 
-const setLanguageData = (_languagePrompts, _languageAnswers) => {  
-  languagePrompts = _languagePrompts;
-  languageAnswers = _languageAnswers;
+const setLanguageData = (languagePrompts, languageAnswers) => {
   $('#editLanguagePrompts').val(languagePrompts);
   $('#editLanguageAnswers').val(languageAnswers);
   editLanguageField();
@@ -945,7 +947,7 @@ const updateVoiceOptions = () => {
   updateVoiceAnswersOptions();
 };
 
-const getClosestVoiceLanguage = (lang) => {  
+const getClosestVoiceLanguage = (lang) => {
   let ids = [];
   let keys = {};
   let id, key;
