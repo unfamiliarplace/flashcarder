@@ -117,12 +117,12 @@ body {
     padding-bottom: 15px;
   }
   
-  #word {  
+  #prompt {
     font-size: 70px;
     font-family: "Times New Roman", "serif";
   }
   
-  #translation {
+  #answer {
     font-size: 60px;
     font-style: italic;
     font-family: "Times New Roman", "serif";
@@ -137,11 +137,11 @@ body {
       font-size: 20px;
     }
     
-    #word {  
+    #prompt {
       font-size: 60px;
     }
    
-    #translation {
+    #answer {
       font-size: 40px;
     }
     
@@ -150,7 +150,7 @@ body {
     }
   }
   
-  #word, #translation {
+  #prompt, #answer {
     text-align: center;
     margin: 2vw 0 4vw 0;
     height: 12vh;
@@ -458,7 +458,7 @@ hr {
   margin: 0;
 }
 
-#wordHider, #translationHider {
+#promptHider, #answerHider {
   font-size: 40px;
   font-family: "Times New Roman", serif;
 }

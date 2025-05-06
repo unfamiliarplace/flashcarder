@@ -19,36 +19,32 @@ const addScenes = () => {
   stage.setDefault("game");
 };
 
-const AppState = {
-  NotStarted: 0,
-
-}
-
 class App {
   options;
   deck;
-
-  currentDictionary;
-  currentDictionaryOrder;
-  currentDictionaryIndex;
-  currentWord;
-  currentTranslation;
+  playthrough;
 
   voiceLanguages;
 
   data;
   uploadedFilename;
 
-  optionsChanged = false;
   shareURL = "";
   copyToast = null;
 
   constructor() {
-
+    this.options = new Options();
   }
 
   setupDefault = () => {
     this.deck = defaultDeck;
+    this.playthrough = new Playthrough(this.deck);
+  }
+
+  canReset = () => {}
+
+  reset = () => {
+    this.setupDefault();
   }
 }
 
@@ -61,7 +57,68 @@ class Deck {
   languageAnswers;
 }
 
+const PlaythroughState = {
+  NotStarted: "NotStarted",
+  ShowingPrompt: "ShowingPrompt",
+  ShowingReveal: "ShowingReveal",
+  Finished: "Finished"
+}
+
+class Playthrough {
+  deck;
+  n;
+  order;
+  index;
+  prompt;
+  answer;
+  state;
+
+  constructor(deck) {
+    this.deck = deck;
+    this.n = Object.keys(deck).length;
+    this.order = this.getOrder();
+    this.index = -1;
+    this.prompt = '';
+    this.answer = '';
+    this.state = PlaythroughState.NotStarted;
+  }
+
+  getOrder = () => {}
+
+  canNext = () => {
+    return this.index < (this.n - 1);
+  }
+
+  canPrevious = () => {
+    return this.index > -1;
+  }
+
+  canReveal = () => {
+    if (app.options.textPromptNext.value() && app.options.textPromptReveal.value()) {
+      return false;
+    } else {
+      return this.state === PlaythroughState.ShowingPrompt;
+    }
+  }
+
+  canRestart = () => {
+    return this.canPrevious();
+  }
+
+  next = () => {}
+
+  previous = () => {}
+
+  reveal = () => {}
+
+  restart = () => {}
+}
+
 class Options {
+  // TODO Add option to toggle whether restarting reshuffles order or not
+
+  optionsChanged;
+
   volume;
   textPromptNext;
   textPromptReveal;
@@ -75,18 +132,91 @@ class Options {
   invertDictionary;
   silentParentheses;
   silentAlternatives;
+
+  constructor() {
+    this.optionsChanged = false;
+    this.createDynamicOptions();
+    this.setDynamicOptionDefaults();
+    this.bindDynamicOptions();
+  }
+
+  createDynamicOptions = () => {
+    this.volume = new OptionSlider($("#optVolume"));
+    this.volume.min(0);
+    this.volume.max(100);
+    this.volume.step(5);
+
+    this.voicePromptsRate = new OptionSlider($("#optVoicePromptsRate"));
+    this.voicePromptsRate.min(25);
+    this.voicePromptsRate.max(200);
+    this.voicePromptsRate.step(5);
+
+    this.voiceAnswersRate = new OptionSlider($("#optVoiceAnswersRate"));
+    this.voiceAnswersRate.min(25);
+    this.voiceAnswersRate.max(200);
+    this.voiceAnswersRate.step(5);
+
+    this.textPromptNext = new OptionCheckbox($("#optTextPromptNext"));
+    this.textAnswerNext = new OptionCheckbox($("#optTextAnswerNext"));
+    this.textPromptReveal = new OptionCheckbox($("#optTextPromptReveal"));
+    this.textAnswerReveal = new OptionCheckbox($("#optTextAnswerReveal"));
+    this.sayPrompt = new OptionCheckbox($("#optSayPrompt"));
+    this.sayAnswer = new OptionCheckbox($("#optSayAnswer"));
+    this.randomizeOrder = new OptionCheckbox($("#optRandomizeOrder"));
+    this.invertDictionary = new OptionCheckbox($("#optInvertDictionary"));
+    this.silentParentheses = new OptionCheckbox($("#optSilentParentheses"));
+    this.silentAlternatives = new OptionCheckbox($("#optSilentAlternatives"));
+  };
+
+  setDynamicOptionDefaults = () => {
+    this.optionsChanged = false;
+
+    this.volume.value(100);
+    this.voicePromptsRate.value(100);
+    this.voiceAnswersRate.value(100);
+
+    // TODO Make constants for the defaults
+    this.textPromptNext.value(true);
+    this.textPromptReveal.value(true);
+    this.textAnswerNext.value(false);
+    this.textAnswerReveal.value(true);
+    this.sayPrompt.value(false);
+    this.sayAnswer.value(false);
+    this.randomizeOrder.value(true);
+    this.invertDictionary.value(false);
+    this.silentParentheses.value(true);
+    this.silentAlternatives.value(true);
+
+    toggleControl($("#btnSetDefaultOptions"), false);
+  };
+
+  bindDynamicOptions = () => {
+    this.textPromptNext.change(toggleTextPrompt);
+    this.textPromptReveal.change(toggleTextPrompt);
+    this.textAnswerNext.change(toggleTextAnswer);
+    this.textAnswerReveal.change(toggleTextAnswer);
+
+    $("#optionsPanel input").change(changeOption);
+    $("#optionsPanel select").change(changeOption);
+    this.voiceAnswersRate.change(changeOption);
+    this.voicePromptsRate.change(changeOption);
+
+    this.randomizeOrder.change(changeOptionAndRestart);
+    this.invertDictionary.change(invertDictionary);
+    this.silentParentheses.change(changeOption);
+    this.silentAlternatives.change(changeOption);
+  }
 }
 
 class Parser {
   static parseData = (content, path) => {
     if (path.endsWith("json")) {
-      data = Parser.parseJSON(content);
+      return Parser.parseJSON(content);
     } else if (path.endsWith("txt")) {
-      data = Parser.parseTXT(content);
+      return Parser.parseTXT(content);
     } else if (path.endsWith("csv")) {
-      data = Parser.parseCSV(content);
+      return Parser.parseCSV(content);
     }
-    return data;
   };
 
   static parseJSON = (content) => {
@@ -427,40 +557,6 @@ class Downloader {
   };
 }
 
-let optVolume = null;
-let optTextPromptNext = null;
-let optTextPromptReveal = null;
-let optTextAnswerNext = null;
-let optTextAnswerReveal = null;
-let optSayPrompt = null;
-let optSayAnswer = null;
-let optVoicePromptsRate = null;
-let optVoiceAnswersRate = null;
-let optRandomizeOrder = null;
-let optInvertDictionary = null;
-let optSilentParentheses = null;
-let optSilentAlternatives = null;
-
-let dictionary = JSON.parse(JSON.stringify(defaultDictionary));
-let title = defaultTitle;
-let source = defaultSource;
-let sourceURL = defaultSourceURL;
-let languagePrompts = defaultLanguagePrompts;
-let languageAnswers = defaultLanguageAnswers;
-
-let currentDictionary = {};
-let currentDictionaryOrder = [];
-let currentDictionaryIndex = 0;
-
-let word = "";
-let translation = "";
-
-let voiceLanguages = [];
-
-let data = {};
-let filename = "";
-
-
 const restartDictionary = () => {
   currentDictionary = JSON.parse(JSON.stringify(dictionary));
   if (optInvertDictionary.value()) {
@@ -486,8 +582,8 @@ const updateWordShown = () => {
   word = keys[i];
   translation = currentDictionary[word];
 
-  $("#word").html(word);
-  $("#translation").html(translation);
+  $("#prompt").html(word);
+  $("#answer").html(translation);
 
   if (optSayPrompt.value()) {
     speech.cancel();
@@ -496,23 +592,23 @@ const updateWordShown = () => {
   }
 
   if (optTextPromptNext.value()) {
-    $("#word").removeClass("hide");
-    $("#wordHider").addClass("hide");
+    $("#prompt").removeClass("hide");
+    $("#promptHider").addClass("hide");
   } else {
-    $("#word").addClass("hide");
-    $("#wordHider").removeClass("hide");
+    $("#prompt").addClass("hide");
+    $("#promptHider").removeClass("hide");
   }
 
   if (optTextAnswerNext.value()) {
-    $("#translation").removeClass("hide");
-    $("#translationHider").addClass("hide");
+    $("#answer").removeClass("hide");
+    $("#answerHider").addClass("hide");
   } else {
-    $("#translation").addClass("hide");
-    $("#translationHider").removeClass("hide");
+    $("#answer").addClass("hide");
+    $("#answerHider").removeClass("hide");
   }
 
   $("#infoCount").html(currentDictionaryIndex + 1);
-  checkAndToggleControls();
+  updateGameControls();
 }
 
 const next = () => {
@@ -545,18 +641,18 @@ const reveal = () => {
   }
 
   if (optTextPromptReveal.value()) {
-    $("#word").removeClass("hide");
-    $("#wordHider").addClass("hide");
+    $("#prompt").removeClass("hide");
+    $("#promptHider").addClass("hide");
   } else {
-    $("#word").addClass("hide");
-    $("#wordHider").removeClass("hide");
+    $("#prompt").addClass("hide");
+    $("#promptHider").removeClass("hide");
   }
   if (optTextAnswerReveal.value()) {
-    $("#translation").removeClass("hide");
-    $("#translationHider").addClass("hide");
+    $("#answer").removeClass("hide");
+    $("#answerHider").addClass("hide");
   } else {
-    $("#translation").addClass("hide");
-    $("#translationHider").removeClass("hide");
+    $("#answer").addClass("hide");
+    $("#answerHider").removeClass("hide");
   }
 
   if (optSayAnswer.value()) {
@@ -578,41 +674,14 @@ const restart = (force = false) => {
   speech.cancel();
 
   restartDictionary();
-  checkAndToggleControls();
+  updateGameControls();
 
   $("#infoCount").html(0);
-  $("#word").html("");
-  $("#translation").html("");
+  $("#prompt").html("");
+  $("#answer").html("");
 };
 
-const canNext = () => {
-  return currentDictionaryIndex < (currentDictionaryOrder.length - 1);
-};
-
-const canPrevious = () => {
-  return currentDictionaryIndex > -1;
-}
-
-const canReveal = () => {
-  if (optTextPromptNext.value() && optTextAnswerNext.value()) {
-    return false;
-  } else {
-    return (
-      $("#translation").hasClass("hide") &&
-      (currentDictionaryIndex > -1)
-    );
-  }
-};
-
-const canRestart = () => {
-  return canPrevious();
-};
-
-const canReset = () => {
-
-}
-
-const checkAndToggleControls = () => {
+const updateGameControls = () => {
   toggleControl($("#btnNext"), canNext());
   toggleControl($("#btnPrevious"), canPrevious());
   toggleControl($("#btnReveal"), canReveal());
@@ -624,33 +693,37 @@ const upload = () => {
 };
 
 const receiveUploadedContent = (content, path) => {
-  filename = path.split("\\").pop().split("/").pop().toLowerCase();
-  data = parseData(content, path);
+  app.filename = path.split("\\").pop().split("/").pop().toLowerCase();
+  app.data = Parser.parseData(content, path);
 
-  if (data.sourceURL === "") {
-    data.sourceURL = "#";
+  if (app.data.sourceURL === "") {
+    app.data.sourceURL = "#";
   }
   
-  else if (!data.sourceURL.startsWith("http")) {
-    data.sourceURL = "https://" + data.sourceURL;
+  else if (!app.data.sourceURL.startsWith("http")) {
+    app.data.sourceURL = "https://" + data.sourceURL;
   }
 
-  setData(data.dictionary, data.title, data.source, data.sourceURL);
+  setData(app.data.dictionary, app.data.title, app.data.source, app.data.sourceURL);
 
   /*
   TODO Maybe add a settings page for the app (not options for the deck!)
   where you choose things like default language for unknown decks
   */
 
-  let LP = (data.languagePrompts === null) ? defaultLanguagePrompts : data.languagePrompts;
-  let LA = (data.languageAnswers === null) ? defaultLanguageAnswers : data.languageAnswers;
+  let LP = (app.data.languagePrompts === null) ? defaultDeck.languagePrompts : app.data.languagePrompts;
+  let LA = (app.data.languageAnswers === null) ? defaultDeck.languageAnswers : app.data.languageAnswers;
   setLanguageData(LP, LA);
 
   toggleControl($("#btnReset"), true);
 };
 
 const reset = () => {
-  if (!isControlEnabled($("#btnReset"))) {
+  if (app.canReset()) {
+    app.reset();
+  }
+
+  if (! app.canReset()) {
     return;
   }
 
@@ -660,79 +733,10 @@ const reset = () => {
   setLanguageData(defaultLanguagePrompts, defaultLanguageAnswers);
   
   toggleControl($("#btnReset"), false);
-  // toggleControl($("#btnShare"), false);
-};
-
-const handleKeyup = (e) => {
-      
-  let tag = document.activeElement.tagName;
-  if (["input", "textarea"].includes(tag.toLowerCase()) && (e.code !== "Escape")) {
-    return;
-  }
-  
-  switch (e.code) {
-    case "KeyN":
-      next();
-      break;
-
-    case "KeyP":
-      previous();
-      break;
-
-    case "KeyR":
-      reveal();
-      break;
-
-    case "KeyX":
-      restart();
-      break;
-
-    case "KeyU":
-      upload();
-      break;
-
-    case "KeyZ":
-      reset();
-      break;
-
-    case "KeyH":
-      stage.toggle("help");
-      break;
-
-    case "KeyO":
-      stage.toggle("options");
-      break;
-
-    case "KeyS":
-      stage.toggle("share");
-      break;
-
-    case "KeyE":
-      stage.toggle("edit");
-      break;
-
-    case "KeyD":
-      setDefaultOptions();
-      break;
-
-    case "Escape":
-      stage.show('game');
-
-      if ($("#dropzone").css("display") !== "none") {
-        $("#dropzone").css("display", "none");
-      }
-
-      break;
-  }
 };
 
 const toggleControl = (control, enable) => {
-  control.prop("wasEnabled", isControlEnabled(control)); // TODO wow this is bad
   control.prop("disabled", !enable);
-};
-
-const isControlEnabled = (control) => {
-  return !control.prop("disabled");
 };
 
 const setDictionary = (newDictionary) => {
@@ -950,39 +954,39 @@ const readDataFromURL = () => {
 };
 
 const compileSaveData = () => {
-  let _data = {};
+  let data = {};
 
-  _data["dictionary"] = JSON.parse(JSON.stringify(dictionary));
+  data["dictionary"] = JSON.parse(JSON.stringify(dictionary));
 
   if (title && title !== source) {
-    _data["title"] = title;
+    data["title"] = title;
   }
 
   if (source) {
-    _data["source"] = source;
+    data["source"] = source;
   }
 
   if (sourceURL) {
-    _data["sourceURL"] = sourceURL;
+    data["sourceURL"] = sourceURL;
   }
 
   if (
     $("#optLanguagePrompts").val() &&
     $("#optLanguagePrompts").val() !== "--" &&
-    $("#optLanguagePrompts").val() !== defaultLanguagePrompts
+    $("#optLanguagePrompts").val() !== defaultDeck.languagePrompts
   ) {
-    _data["languagePrompts"] = $("#optLanguagePrompts").val();
+    data["languagePrompts"] = $("#optLanguagePrompts").val();
   }
 
   if (
     $("#optLanguageAnswers").val() &&
     $("#optLanguageAnswers").val() !== "--" &&
-    $("#optLanguageAnswers").val() !== defaultLanguageAnswers
+    $("#optLanguageAnswers").val() !== defaultDeck.languageAnswers
   ) {
-    _data["languageAnswers"] = $("#optLanguageAnswers").val();
+    data["languageAnswers"] = $("#optLanguageAnswers").val();
   }
 
-  return _data;
+  return data;
 };
 
 const formatURLParams = () => {
@@ -1046,6 +1050,25 @@ const copyShareURL = () => {
   copyToast = Copy.toast(copyToast,  $("#shareURL").val(), 'Copied share URL!');
 };
 
+const createLanguageOptions = () => {
+  let select, option, optionValue, optionText;
+
+  for (let id of ["optLanguagePrompts", "optLanguageAnswers"]) {
+    select = $(`#${id}`);
+    select.empty();
+
+    option = `<option value="--">--</option>`;
+    select.append(option);
+
+    for (let lang of voiceLanguages) {
+      optionValue = lang[0];
+      optionText = lang[1];
+      option = `<option value="${optionValue}">${optionText}</option>`;
+      select.append(option);
+    }
+  }
+};
+
 const updateVoiceLanguages = () => {
   if (typeof speechSynthesis === "undefined") {
     return;
@@ -1069,25 +1092,6 @@ const updateVoiceLanguages = () => {
   voiceLanguages = [];
   for (let lang of languageSet) {
     voiceLanguages.push([lang, languageToNiceName[lang]]);
-  }
-};
-
-const createLanguageOptions = () => {
-  let select, option, optionValue, optionText;
-
-  for (let id of ["optLanguagePrompts", "optLanguageAnswers"]) {
-    select = $(`#${id}`);
-    select.empty();
-
-    option = `<option value="--">--</option>`;
-    select.append(option);
-
-    for (let lang of voiceLanguages) {
-      optionValue = lang[0];
-      optionText = lang[1];
-      option = `<option value="${optionValue}">${optionText}</option>`;
-      select.append(option);
-    }
   }
 };
 
@@ -1250,11 +1254,11 @@ const toggleTextHolder = (holder, hider) => {
 };
 
 const toggleTextPrompt = () => {
-  toggleTextHolder($("#word"), $("#wordHider"));
+  toggleTextHolder($("#prompt"), $("#promptHider"));
 };
 
 const toggleTextAnswer = () => {
-  toggleTextHolder($("#translation"), $("#translationHider"));
+  toggleTextHolder($("#answer"), $("#answerHider"));
 };
 
 const invertDictionary = () => {
@@ -1432,95 +1436,89 @@ const createDropzone = () => {
   );
 };
 
-const createDynamicOptions = () => {
-  optVolume = new OptionSlider($("#optVolume"));
-  optVolume.min(0);
-  optVolume.max(100);
-  optVolume.step(5);
+const handleKeyup = (e) => {
 
-  optVoicePromptsRate = new OptionSlider($("#optVoicePromptsRate"));
-  optVoicePromptsRate.min(25);
-  optVoicePromptsRate.max(200);
-  optVoicePromptsRate.step(5);
+  let tag = document.activeElement.tagName;
+  if (["input", "textarea"].includes(tag.toLowerCase()) && (e.code !== "Escape")) {
+    return;
+  }
 
-  optVoiceAnswersRate = new OptionSlider($("#optVoiceAnswersRate"));
-  optVoiceAnswersRate.min(25);
-  optVoiceAnswersRate.max(200);
-  optVoiceAnswersRate.step(5);
+  switch (e.code) {
+    case "KeyN":
+      next();
+      break;
 
-  optTextPromptNext = new OptionCheckbox($("#optTextPromptNext"));
-  optTextAnswerNext = new OptionCheckbox($("#optTextAnswerNext"));
-  optTextPromptReveal = new OptionCheckbox($("#optTextPromptReveal"));
-  optTextAnswerReveal = new OptionCheckbox($("#optTextAnswerReveal"));
-  optSayPrompt = new OptionCheckbox($("#optSayPrompt"));
-  optSayAnswer = new OptionCheckbox($("#optSayAnswer"));
-  optRandomizeOrder = new OptionCheckbox($("#optRandomizeOrder"));
-  optInvertDictionary = new OptionCheckbox($("#optInvertDictionary"));
-  optSilentParentheses = new OptionCheckbox($("#optSilentParentheses"));
-  optSilentAlternatives = new OptionCheckbox($("#optSilentAlternatives"));
+    case "KeyP":
+      previous();
+      break;
 
-  setDynamicOptionDefaults();
-  bindDynamicOptions();
+    case "KeyR":
+      reveal();
+      break;
+
+    case "KeyX":
+      restart();
+      break;
+
+    case "KeyU":
+      upload();
+      break;
+
+    case "KeyZ":
+      reset();
+      break;
+
+    case "KeyH":
+      stage.toggle("help");
+      break;
+
+    case "KeyO":
+      stage.toggle("options");
+      break;
+
+    case "KeyS":
+      stage.toggle("share");
+      break;
+
+    case "KeyE":
+      stage.toggle("edit");
+      break;
+
+    case "KeyD":
+      setDefaultOptions();
+      break;
+
+    case "Escape":
+      stage.show('game');
+
+      if ($("#dropzone").css("display") !== "none") {
+        $("#dropzone").css("display", "none");
+      }
+
+      break;
+  }
 };
 
-const setDynamicOptionDefaults = () => {
-  optionsChanged = false;
-
-  optVolume.value(100);
-  optVoicePromptsRate.value(100);
-  optVoiceAnswersRate.value(100);
-
-  optTextPromptNext.value(true);
-  optTextPromptReveal.value(true);
-  optTextAnswerNext.value(false);
-  optTextAnswerReveal.value(true);
-  optSayPrompt.value(false);
-  optSayAnswer.value(false);
-  optRandomizeOrder.value(true);
-  optInvertDictionary.value(false);
-  optSilentParentheses.value(true);
-  optSilentAlternatives.value(true);
-
-  toggleControl($("#btnSetDefaultOptions"), false);
-};
-
-const bindDynamicOptions = () => {
-  $("#optLanguagePrompts").change(updateVoicePromptsOptions);
-  $("#optLanguageAnswers").change(updateVoiceAnswersOptions);
-
-  $("#optTextPromptNext").change(toggleTextPrompt);
-  $("#optTextPromptReveal").change(toggleTextPrompt);
-  $("#optTextAnswerNext").change(toggleTextAnswer);
-  $("#optTextAnswerReveal").change(toggleTextAnswer);
-
-  $("#optionsPanel input").change(changeOption);
-  $("#optionsPanel select").change(changeOption);
-  optVoiceAnswersRate.change(changeOption);
-  optVoicePromptsRate.change(changeOption);
-
-  $("#optRandomizeOrder").change(changeOptionAndRestart);
-  $("#optInvertDictionary").change(invertDictionary);
-  $("#optSilentParentheses").change(changeOption);
-  $("#optSilentAlternatives").change(changeOption);
-}
-
-const bindControls = () => {
+const bindGameControls = () => {
   $("#btnNext").click(next);
   $("#btnPrevious").click(previous);
   $("#btnReveal").click(reveal);
   $("#btnRestart").click(restart);
   $("#btnReset").click(reset);
-  $("#btnCopyShareURL").click(copyShareURL);
 }
 
-const bindDownloaders = () => {
+const bindShareControls = () => {
+  $("#btnCopyShareURL").click(copyShareURL);
   $("#btnDownloadJSON").click(downloadJSON);
   $("#btnDownloadCSV").click(downloadCSV);
   $("#btnDownloadTXT").click(downloadTXT);
+}
+
+const bindOptionsControls = () => {
   $("#btnSetDefaultOptions").click(setDynamicOptionDefaults);
 }
 
-const bindEditors = () => {
+const bindEditorControls = () => {
   $('#editSource').keyup(editMetaField);
   $('#editTitle').keyup(editMetaField);
   $('#editURL').keyup(editMetaField);
@@ -1542,20 +1540,20 @@ const bindEditors = () => {
 }
 
 const bind = () => {
-  bindControls();
-  bindDownloaders();
-  bindEditors();
+  bindGameControls();
+  bindShareControls();
+  bindOptionsControls();
+  bindEditorControls();
 
   $(document).keyup(handleKeyup);
   speechSynthesis.onvoiceschanged = updateVoiceOptions;
 };
 
 const initialize = () => {
-  app = new App();
-
   updateCopyright();
 
-  createDynamicOptions();
+  app = new App();
+
   createUploadButton();
   createDropzone();
 
