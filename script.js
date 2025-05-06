@@ -611,7 +611,7 @@ const setRestartData = (_dictionary, skipEditorItems, skipEditorRaw) => {
   } 
 
   restart(true);
-  
+
   let n = Object.keys(currentDictionary).length;
   $('#editItemsHeading').html(`Items (${n})`);
 
@@ -622,8 +622,8 @@ const setRestartData = (_dictionary, skipEditorItems, skipEditorRaw) => {
 const setLanguageData = (newLanguagePrompts, newLanguageAnswers) => {
   languagePrompts = newLanguagePrompts;
   languageAnswers = newLanguageAnswers;
-  $('#editLanguagePrompts').val(newLanguagePrompts);
-  $('#editLanguageAnswers').val(newLanguageAnswers);
+  $('#editLanguagePrompts').val(languagePrompts);
+  $('#editLanguageAnswers').val(languageAnswers);
   editLanguageField();
 }
 
