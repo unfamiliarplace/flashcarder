@@ -619,11 +619,11 @@ const setRestartData = (_dictionary, skipEditorItems, skipEditorRaw) => {
   toggleControl($("#btnShare"), true);
 }
 
-const setLanguageData = (_languagePrompts, _languageAnswers) => {
-  languagePrompts = _languagePrompts;
-  languageAnswers = _languageAnswers;
-  $('#editLanguagePrompts').val(_languagePrompts);
-  $('#editLanguageAnswers').val(_languageAnswers);
+const setLanguageData = (newLanguagePrompts, newLanguageAnswers) => {
+  languagePrompts = newLanguagePrompts;
+  languageAnswers = newLanguageAnswers;
+  $('#editLanguagePrompts').val(newLanguagePrompts);
+  $('#editLanguageAnswers').val(newLanguageAnswers);
   editLanguageField();
 }
 
