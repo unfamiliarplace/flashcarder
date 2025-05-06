@@ -248,9 +248,14 @@ const receiveUploadedContent = (content, path) => {
 
   setData(data.dictionary, data.title, data.source, data.sourceURL);
 
-  // if (data.languagePrompts || data.languageAnswers) {
-    setLanguageData(data.languagePrompts, data.languageAnswers);
-  // }
+  /*
+  TODO Maybe add a settings page for the app (not options for the deck!)
+  where you choose things like default language for unknown decks
+  */
+
+  let LP = (data.languagePrompts === null) ? defaultLanguagePrompts : data.languagePrompts;
+  let LA = (data.languageAnswers === null) ? defaultLanguageAnswers : data.languageAnswers;
+  setLanguageData(LP, LA);
 
   toggleControl($("#btnReset"), true);
 };
