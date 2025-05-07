@@ -47,10 +47,30 @@ class App {
     }
 
     handleDeckChange = () => {
+        setDictionary(_dictionary);
+        populateShareURL();
+        displaySamples();
+
+        populateEditorMeta();
+
+        if (skipEditorItems !== true) {
+            populateEditorItems();
+        }
+
+        if (skipEditorRaw !== true) {
+            populateEditorRaw();
+        }
+
+        restart(true);
+
+        let n = Object.keys(currentDictionary).length;
+        $('#editItemsHeading').html(`Items (${n})`);
+
+        toggleControl($("#btnReset"), true);
+        toggleControl($("#btnShare"), true);
     }
 
     handleNonDeckChange = () => {
-    }
 }
 
 class Deck {
@@ -1399,13 +1419,7 @@ const createDropzone = () => {
     );
 };
 
-updateBeginPanel = () => {
-    toggleVisibility($("#toBeginPanel"), app.playthrough.state === PlaythroughState.InitializedButNotStarted);
-}
-
-updateCountInfo = () => {
-    $("#infoCount").text(app.playthrough.index + 1);
-}
+/* Display updater */
 
 updateDisplay = () => {
     $("#prompt").text(app.playthrough.prompt);
@@ -1414,11 +1428,17 @@ updateDisplay = () => {
     toggleTextPromptVisibility();
     toggleTextAnswerVisibility();
 
-    this.updateCountInfo();
-    this.updateBeginPanel();
+    $("#infoCount").text(app.playthrough.index + 1);
+    toggleVisibility($("#toBeginPanel"),
+        app.playthrough.state === PlaythroughState.InitializedButNotStarted);
 }
 
-/* Possibility-checking aliases */
+/*
+* Possibility-checking aliases... a little redundant, but...
+* Having these checks in the functions themselves requires adding a force flag,
+* and having them as anonymous functions during binding seems uglier than this
+* (especially because keyup and buttons both need to bind them).
+*/
 
 const next = () => {
     if (app.playthrough.canNext()) {
