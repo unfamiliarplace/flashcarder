@@ -45,6 +45,12 @@ class App {
 
         this.setupDefault();
     }
+
+    handleDeckChange = () => {
+    }
+
+    handleNonDeckChange = () => {
+    }
 }
 
 class Deck {
@@ -1585,7 +1591,7 @@ const updateCopyright = () => {
 const initialize = () => {
     updateCopyright();
 
-    stage  = new _Stage();
+    stage = new _Stage();
     addScenes();
     stage.show("game");
 
