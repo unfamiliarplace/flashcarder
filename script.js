@@ -1,24 +1,6 @@
 const defaultCSVDelimiter = ",";
 const speech = window.speechSynthesis;
 
-const stage = new _Stage();
-
-const addScenes = () => {
-  stage.addScene(
-    new _Scene("game", "#gamePanel", "", [$("#gamePanel button")])
-  );
-  stage.addScene(new _Scene("edit", "#editPanel", "#btnEdit", []));
-  stage.addScene(
-    new _Scene("options", "#optionsPanel", "#btnOptions", [
-      $("#optionsPanel button"),
-      $("#optionsPanel input")
-    ])
-  );
-  stage.addScene(new _Scene("help", "#helpPanel", "#btnHelp", []));
-
-  stage.setDefault("game");
-};
-
 class App {
   options;
   deck;
@@ -37,13 +19,26 @@ class App {
   }
 
   setupDefault = () => {
-    this.deck = defaultDeck;
+    this.deck = defaultDeck.copy();
     this.playthrough = new Playthrough(this.deck);
   }
 
   canReset = () => {}
 
   reset = () => {
+    speech.cancel(); // JIC I guess?
+
+    this.shareURL = "";
+    this.copyToast = null;
+
+    this.data = {};
+    this.uploadedFilename = "";
+
+    this.voiceLanguages = {};
+
+    this.deck = null;
+    this.playthrough = null;
+
     this.setupDefault();
   }
 }
@@ -55,38 +50,70 @@ class Deck {
   sourceURL;
   languagePrompts;
   languageAnswers;
+
+  copy = () => {
+    let d = new Deck();
+    d.dictionary = JSON.parse(JSON.stringify(this.dictionary));
+
+    d.title = this.title;
+    d.sourceName = this.sourceName;
+    d.sourceURL = this.sourceURL;
+    d.languagePrompts = this.languagePrompts;
+    d.languageAnswers = this.languageAnswers;
+
+    return d;
+  }
+
+  invert = () => {
+    this.dictionary = Tools.swapObjectKeys(this.dictionary);
+    return this;
+  }
 }
 
 const PlaythroughState = {
   NotStarted: "NotStarted",
   ShowingPrompt: "ShowingPrompt",
-  ShowingReveal: "ShowingReveal",
-  Finished: "Finished"
+  ShowingReveal: "ShowingReveal"
 }
 
 class Playthrough {
-  deck;
-  n;
   order;
   index;
   prompt;
   answer;
   state;
 
-  constructor(deck) {
-    this.deck = deck;
-    this.n = Object.keys(deck).length;
-    this.order = this.getOrder();
-    this.index = -1;
-    this.prompt = '';
-    this.answer = '';
-    this.state = PlaythroughState.NotStarted;
+  constructor() {
+    this.restart();
   }
 
-  getOrder = () => {}
+  updateOrder = () => {
+    this.order = [];
+
+    for (let i = 0; i < Object.keys(app.deck.dictionary).length; i++) {
+      this.order.push(i);
+    }
+
+    if (app.options.randomizeOrder.value()) {
+      this.order = Tools.shuffle(this.order);
+    }
+  }
+
+  updateCard = () => {
+    let i = this.order[this.index];
+    let keys = Object.keys(app.deck.dictionary);
+    this.prompt = keys[i];
+    this.answer = app.deck.dictionary[this.prompt];
+  }
+
+  clearCard = () => {
+    this.index = -1;
+    this.prompt = "";
+    this.answer = "";
+  }
 
   canNext = () => {
-    return this.index < (this.n - 1);
+    return this.index < (this.order.length - 1);
   }
 
   canPrevious = () => {
@@ -105,13 +132,73 @@ class Playthrough {
     return this.canPrevious();
   }
 
-  next = () => {}
+  sayPrompt = () => {
+    if (app.options.sayPrompt.value()) {
+      speech.cancel();
+      let voice = $("#optVoicePrompts").val(); // TODO
+      sayUtterance(prompt, voice, app.options.voicePromptsRate.value() / 100);
+    }
+  }
 
-  previous = () => {}
+  sayReveal = () => {
+    if (app.options.sayAnswer.value()) {
+      speech.cancel();
+      let voice = $("#optVoiceAnswers").val(); // TODO
+      sayUtterance(this.answer, voice, app.options.voiceAnswersRate.value() / 100);
+    }
+  }
 
-  reveal = () => {}
+  next = () => {
+    if (app.options.textAnswerNext.value()) {
+      this.state = PlaythroughState.ShowingReveal;
+    } else {
+      this.state = PlaythroughState.ShowingPrompt;
+    }
 
-  restart = () => {}
+    this.index++;
+    this.updateCard();
+
+    // TODO What if they have show answer on next and read aloud on reveal?
+    this.sayPrompt();
+
+    updateDisplay();
+    updateGameControls();
+  };
+
+  previous = () => {
+    if (this.index === 0) {
+      this.state = PlaythroughState.NotStarted;
+    }
+
+    this.index--;
+    this.updateCard();
+
+    this.sayPrompt();
+
+    updateDisplay();
+    updateGameControls();
+  }
+
+  reveal = () => {
+    this.state = PlaythroughState.ShowingReveal;
+
+    this.sayReveal();
+
+    updateDisplay();
+    updateGameControls();
+  };
+
+  restart = () => {
+    this.state = PlaythroughState.NotStarted;
+
+    this.clearCard();
+    this.updateOrder();
+
+    speech.cancel();
+
+    updateDisplay();
+    updateGameControls();
+  };
 }
 
 class Options {
@@ -191,10 +278,10 @@ class Options {
   };
 
   bindDynamicOptions = () => {
-    this.textPromptNext.change(toggleTextPrompt);
-    this.textPromptReveal.change(toggleTextPrompt);
-    this.textAnswerNext.change(toggleTextAnswer);
-    this.textAnswerReveal.change(toggleTextAnswer);
+    this.textPromptNext.change(toggleTextPromptVisibility);
+    this.textPromptReveal.change(toggleTextPromptVisibility);
+    this.textAnswerNext.change(toggleTextAnswerVisibility);
+    this.textAnswerReveal.change(toggleTextAnswerVisibility);
 
     $("#optionsPanel input").change(changeOption);
     $("#optionsPanel select").change(changeOption);
@@ -557,137 +644,6 @@ class Downloader {
   };
 }
 
-const restartDictionary = () => {
-  currentDictionary = JSON.parse(JSON.stringify(dictionary));
-  if (optInvertDictionary.value()) {
-    currentDictionary = Tools.swapObjectKeys(currentDictionary);
-  }
-
-  currentDictionaryOrder = [];
-  for (let i = 0; i < Object.keys(currentDictionary).length; i++) {
-    currentDictionaryOrder.push(i);
-  }
-
-  if (optRandomizeOrder.value()) {
-    currentDictionaryOrder = Tools.shuffle(currentDictionaryOrder);
-  }
-
-  currentDictionaryIndex = -1;
-};
-
-const updateWordShown = () => {
-  let i = currentDictionaryOrder[currentDictionaryIndex];
-
-  keys = Object.keys(currentDictionary);
-  word = keys[i];
-  translation = currentDictionary[word];
-
-  $("#prompt").html(word);
-  $("#answer").html(translation);
-
-  if (optSayPrompt.value()) {
-    speech.cancel();
-    let voice = $("#optVoicePrompts").val();
-    sayUtterance(word, voice, optVoicePromptsRate.value() / 100);
-  }
-
-  if (optTextPromptNext.value()) {
-    $("#prompt").removeClass("hide");
-    $("#promptHider").addClass("hide");
-  } else {
-    $("#prompt").addClass("hide");
-    $("#promptHider").removeClass("hide");
-  }
-
-  if (optTextAnswerNext.value()) {
-    $("#answer").removeClass("hide");
-    $("#answerHider").addClass("hide");
-  } else {
-    $("#answer").addClass("hide");
-    $("#answerHider").removeClass("hide");
-  }
-
-  $("#infoCount").html(currentDictionaryIndex + 1);
-  updateGameControls();
-}
-
-const next = () => {
-  if (stage.hiding("game") || !canNext()) {
-    return;
-  }
-
-  currentDictionaryIndex++;
-  updateWordShown();
-
-  $("#toBeginPanel").addClass("hide");
-};
-
-const previous = () => {
-  if (stage.hiding("game") || !canPrevious()) {
-    return;
-  }
-
-  currentDictionaryIndex--;
-  updateWordShown();
-
-  if (currentDictionaryIndex === -1) {
-    $("#toBeginPanel").removeClass("hide");
-  }
-}
-
-const reveal = () => {
-  if (stage.hiding("game") || !canReveal()) {
-    return;
-  }
-
-  if (optTextPromptReveal.value()) {
-    $("#prompt").removeClass("hide");
-    $("#promptHider").addClass("hide");
-  } else {
-    $("#prompt").addClass("hide");
-    $("#promptHider").removeClass("hide");
-  }
-  if (optTextAnswerReveal.value()) {
-    $("#answer").removeClass("hide");
-    $("#answerHider").addClass("hide");
-  } else {
-    $("#answer").addClass("hide");
-    $("#answerHider").removeClass("hide");
-  }
-
-  if (optSayAnswer.value()) {
-    speech.cancel();
-    let voice = $("#optVoiceAnswers").val();
-    sayUtterance(translation, voice, optVoiceAnswersRate.value() / 100);
-  }
-
-  toggleControl($("#btnReveal"), false);
-};
-
-const restart = (force = false) => {
-  if ((stage.hiding("game") && !force) || !canRestart()) {
-    return;
-  }
-
-  $("#toBeginPanel").removeClass("hide");
-
-  speech.cancel();
-
-  restartDictionary();
-  updateGameControls();
-
-  $("#infoCount").html(0);
-  $("#prompt").html("");
-  $("#answer").html("");
-};
-
-const updateGameControls = () => {
-  toggleControl($("#btnNext"), canNext());
-  toggleControl($("#btnPrevious"), canPrevious());
-  toggleControl($("#btnReveal"), canReveal());
-  toggleControl($("#btnRestart"), canRestart());
-}
-
 const upload = () => {
   $("#btnUpload").click();
 };
@@ -723,21 +679,30 @@ const reset = () => {
     app.reset();
   }
 
-  if (! app.canReset()) {
-    return;
-  }
-
-  speech.cancel();
-
   setData(defaultDictionary, defaultTitle, defaultSource, defaultSourceURL);  
   setLanguageData(defaultLanguagePrompts, defaultLanguageAnswers);
   
   toggleControl($("#btnReset"), false);
 };
 
+const toggleVisibility = (element, visible) => {
+  if (visible) {
+    element.removeClass("hide");
+  } else {
+    element.addClass("hide");
+  }
+}
+
 const toggleControl = (control, enable) => {
-  control.prop("disabled", !enable);
+  control.prop("disabled", ! enable);
 };
+
+const updateGameControls = () => {
+  toggleControl($("#btnNext"), app.playthrough.canNext());
+  toggleControl($("#btnPrevious"), app.playthrough.canPrevious());
+  toggleControl($("#btnReveal"), app.playthrough.canReveal());
+  toggleControl($("#btnRestart"), app.playthrough.canRestart());
+}
 
 const setDictionary = (newDictionary) => {
   dictionary = JSON.parse(JSON.stringify(newDictionary));
@@ -774,14 +739,7 @@ const setSource = (_title, _source, _URL) => {
   $("#sourceContainer").append(html);
 };
 
-const displaySamples = () => {
-  let keys = Object.keys(currentDictionary);
-  let sP = keys[0];
-  let sA = currentDictionary[sP];
 
-  $("#samplePrompt").html(`e.g. "${sP}"`);
-  $("#sampleAnswer").html(`e.g. "${sA}"`);
-};
 
 /* Data that does not trigger a restart of the deck */
 const setNonRestartData = (_title, _source, _sourceURL) => {
@@ -1224,79 +1182,74 @@ const sayUtterance = (text, voiceName, rate) => {
 };
 
 const toggleWord = (holder, hider, show) => {
-  if (show) {
-    holder.removeClass("hide");
-    hider.addClass("hide");
-  } else {
-    holder.addClass("hide");
-    hider.removeClass("hide");
-  }
+  toggleVisibility(holder, show);
+  toggleVisibility(hider, ! show);
 };
 
 const toggleTextHolder = (holder, hider) => {
+  if (app.playthrough.state === PlaythroughState.ShowingPrompt) {
+    toggleWord(holder, hider, app.options.textPromptNext.value());
 
-  // If Reveal is enabled, it means we're showing Next
-  if (canReveal()) {
-    if (optTextPromptNext.value()) {
-      toggleWord(holder, hider, true);
-    } else {
-      toggleWord(holder, hider, false);
-    }
-
-    // Otherwise we're showing Reveal
-  } else {
-    if (optTextPromptReveal.value()) {
-      toggleWord(holder, hider, true);
-    } else {
-      toggleWord(holder, hider, false);
-    }
+  } else if (app.playthrough.state === PlaythroughState.ShowingReveal) {
+    toggleWord(holder, hider, app.options.textPromptReveal.value());
   }
 };
 
-const toggleTextPrompt = () => {
+const toggleTextPromptVisibility = () => {
   toggleTextHolder($("#prompt"), $("#promptHider"));
 };
 
-const toggleTextAnswer = () => {
+const toggleTextAnswerVisibility = () => {
   toggleTextHolder($("#answer"), $("#answerHider"));
+};
+
+const displaySamples = () => {
+  let keys = Object.keys(app.deck.dictionary);
+  let sP = keys[0];
+  let sA = app.deck.dictionary[sP];
+
+  $("#samplePrompt").text(`e.g. "${sP}"`);
+  $("#sampleAnswer").text(`e.g. "${sA}"`);
 };
 
 const invertDictionary = () => {
 
   let vLP = $("#optLanguagePrompts").val();
   let vVP = $("#optVoicePrompts").val();
-  let vRP = optVoicePromptsRate.value();
+  let vRP = voicePromptsRate.value();
 
   let vLA = $("#optLanguageAnswers").val();
   let vVA = $("#optVoiceAnswers").val();
-  let vRA = optVoiceAnswersRate.value();
+  let vRA = voiceAnswersRate.value();
 
+  // TODO
   $("#optLanguagePrompts").val(vLA).change();
   $("#optLanguageAnswers").val(vLP).change();
 
   updateVoicePromptsOptions();
   updateVoiceAnswersOptions();
 
+  // TODO
   $("#optVoicePrompts").val(vVA).change();
   $("#optVoiceAnswers").val(vVP).change();
 
-  optVoicePromptsRate.value(vRA);
-  optVoiceAnswersRate.value(vRP);
-  
+  app.options.voicePromptsRate.value(vRA);
+  app.options.voiceAnswersRate.value(vRP);
+
   // basics
-  
-  changeOptionAndRestart();
+  app.deck = app.deck.copy().invert();
   displaySamples();
+  changeOptionAndRestart();
 };
 
 const changeOption = () => {
-  optionsChanged = true;
+  app.options.optionsChanged = true;
   toggleControl($("#btnSetDefaultOptions"), true);
 };
 
 const changeOptionAndRestart = () => {
   changeOption();
-  restart(true);
+  app.playthrough.restart();
 };
 
 const editMetaField = () => {ß
@@ -1413,10 +1366,6 @@ const editDeleteItem = (e) => {
   editItemField();
 }
 
-const updateCopyright = () => {
-  $('#copyrightYear').text(new Date().getFullYear());
-}
-
 const createUploadButton = () => {
   UploadButton.create(
       $("#uploadButtonContainer"),
@@ -1435,6 +1384,27 @@ const createDropzone = () => {
       "dropzone"
   );
 };
+
+
+
+updateBeginPanel = () => {
+  toggleVisibility($("#toBeginPanel"), this.state === PlaythroughState.NotStarted);
+}
+
+updateCountInfo = () => {
+  $("#infoCount").text(this.index + 1);
+}
+
+updateDisplay = () => {
+  $("#prompt").text(app.playthrough.prompt);
+  $("#answer").text(app.playthrough.answer);
+
+  toggleTextPromptVisibility();
+  toggleTextAnswerVisibility();
+
+  this.updateCountInfo();
+  this.updateBeginPanel();
+}
 
 const handleKeyup = (e) => {
 
@@ -1549,8 +1519,31 @@ const bind = () => {
   speechSynthesis.onvoiceschanged = updateVoiceOptions;
 };
 
+const addScenes = () => {
+  stage.addScene(
+      new _Scene("game", "#gamePanel", "", [$("#gamePanel button")])
+  );
+  stage.addScene(new _Scene("edit", "#editPanel", "#btnEdit", []));
+  stage.addScene(
+      new _Scene("options", "#optionsPanel", "#btnOptions", [
+        $("#optionsPanel button"),
+        $("#optionsPanel input")
+      ])
+  );
+  stage.addScene(new _Scene("help", "#helpPanel", "#btnHelp", []));
+
+  stage.setDefault("game");
+};
+
+const updateCopyright = () => {
+  $('#copyrightYear').text(new Date().getFullYear());
+}
+
 const initialize = () => {
   updateCopyright();
+
+  stage = new _Stage();
+  addScenes();
 
   app = new App();
 
@@ -1582,5 +1575,8 @@ defaultDeck.sourceURL = "#";
 defaultDeck.languagePrompts = "fr-ca";
 defaultDeck.languageAnswers = "en-us";
 
+let stage;
 let app;
+let options;
+
 $(document).ready(initialize);
