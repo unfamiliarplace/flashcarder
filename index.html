@@ -75,18 +75,27 @@
 
             <h2>Prompts</h2>
             <div class='sample' id='samplePrompt'>[sample prompt]</div>
-            <label for='optTextPromptNext'>
-              <input type='checkbox' id='optTextPromptNext' checked='true' />
-              <span class='checkmark'></span>
-              Show after 'Next'</label>
-            <label for='optTextPromptReveal'>
-              <input type='checkbox' id='optTextPromptReveal' checked='true' />
-              <span class='checkmark'></span>
-              Show after 'Reveal'</label>
+
+            <fieldset id='fieldsetShowPrompt' class='fieldsetRadio flexCol'>
+              <legend>Show prompt</legend>
+              <div class='fieldsetRadioSub'>
+
+                <input type="radio" name="optShowPrompt" id="showPromptNext"><label for="showPromptNext">Show prompt on "Next"</label>
+              </div>
+              <div class='fieldsetRadioSub'>
+
+                <input type="radio" name="optShowPrompt" id="showPromptReveal"><label for="showPromptReveal">Show prompt on "Reveal"</label>
+              </div>
+              <div class='fieldsetRadioSub'>
+
+                <input type="radio" name="optShowPrompt" id="showPromptNever"><label for="showPromptNever">Never show prompt</label>
+              </div>
+            </fieldset>
+
             <label for='optSayPrompt'>
               <input type='checkbox' id='optSayPrompt' />
               <span class='checkmark'></span>
-              Read aloud after 'Next'</label>
+              Read aloud on 'Next'</label>
 <!--            <div class='optLabelPlusOption'>-->
 <!--              <label for="optLanguagePrompts">-->
 <!--                <div class="optSideLabel">Voice language</div>-->
@@ -111,18 +120,27 @@
           <div class='optionsCol' id='optionsColAnswers'>
             <h2>Answers</h2>
             <div class='sample' id='sampleAnswer'>[sample answer]</div>
-            <label for='optTextAnswerNext'>
-              <input type='checkbox' id='optTextAnswerNext' />
-              <span class='checkmark'></span>
-              Show after 'Next'</label>
-            <label for='optTextAnswerReveal'>
-              <input type='checkbox' id='optTextAnswerReveal' checked='true' />
-              <span class='checkmark'></span>
-              Show after 'Reveal'</label>
+
+            <fieldset id='fieldsetShowAnswer' class='fieldsetRadio flexCol'>
+              <legend>Show answer</legend>
+              <div class='fieldsetRadioSub'>
+
+                <input type="radio" name="optShowAnswer" id="showAnswerNext"><label for="showAnswerNext">Show answer on "Next"</label>
+              </div>
+              <div class='fieldsetRadioSub'>
+
+                <input type="radio" name="optShowAnswer" id="showAnswerReveal"><label for="showAnswerReveal">Show answer on "Reveal"</label>
+              </div>
+              <div class='fieldsetRadioSub'>
+
+                <input type="radio" name="optShowAnswer" id="showAnswerNever"><label for="showAnswerNever">Never show answer</label>
+              </div>
+            </fieldset>
+
             <label for='optSayAnswer'>
               <input type='checkbox' id='optSayAnswer' />
               <span class='checkmark'></span>
-              Read aloud after 'Reveal'</label>
+              Read aloud on 'Reveal'</label>
 
 <!--            <div class='optLabelPlusOption'>-->
 <!--              <label for="optLanguageAnswers">-->

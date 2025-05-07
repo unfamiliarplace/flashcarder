@@ -128,7 +128,13 @@ class Playthrough {
     }
 
     canReveal = () => {
-        return this.state === PlaythroughState.AfterNext;
+        return [
+            this.state === PlaythroughState.AfterNext,
+            [
+                app.options.showAnswer.value() === 'showAnswerReveal',
+                app.options.sayAnswer.value()
+            ].some(Boolean)
+        ].every(Boolean);
     }
 
     canRestart = () => {
@@ -152,11 +158,7 @@ class Playthrough {
     }
 
     next = () => {
-        if (app.options.textAnswerNext.value()) {
-            this.state = PlaythroughState.AfterReveal;
-        } else {
-            this.state = PlaythroughState.AfterNext;
-        }
+        this.state = PlaythroughState.AfterNext;
 
         this.index++;
         this.updateCard();
@@ -171,8 +173,6 @@ class Playthrough {
     previous = () => {
         if (this.index === 0) {
             this.state = PlaythroughState.InitializedButNotStarted;
-        } else if (app.options.textAnswerNext.value()) {
-            this.state = PlaythroughState.AfterReveal;
         } else {
             this.state = PlaythroughState.AfterNext;
         }
@@ -214,10 +214,8 @@ class Options {
     optionsChanged;
 
     volume;
-    textPromptNext;
-    textPromptReveal;
-    textAnswerNext;
-    textAnswerReveal;
+    showPrompt;
+    showAnswer;
     sayPrompt;
     sayAnswer;
     voicePromptsRate;
@@ -250,10 +248,8 @@ class Options {
         this.voiceAnswersRate.max(200);
         this.voiceAnswersRate.step(5);
 
-        this.textPromptNext = new OptionCheckbox($("#optTextPromptNext"));
-        this.textAnswerNext = new OptionCheckbox($("#optTextAnswerNext"));
-        this.textPromptReveal = new OptionCheckbox($("#optTextPromptReveal"));
-        this.textAnswerReveal = new OptionCheckbox($("#optTextAnswerReveal"));
+        this.showPrompt = new OptionRadio($('input[name="optShowPrompt"]'));
+        this.showAnswer = new OptionRadio($('input[name="optShowAnswer"]'));
         this.sayPrompt = new OptionCheckbox($("#optSayPrompt"));
         this.sayAnswer = new OptionCheckbox($("#optSayAnswer"));
         this.randomizeOrder = new OptionCheckbox($("#optRandomizeOrder"));
@@ -270,10 +266,8 @@ class Options {
         this.voiceAnswersRate.value(100);
 
         // TODO Make constants for the defaults
-        this.textPromptNext.value(true);
-        this.textPromptReveal.value(true);
-        this.textAnswerNext.value(false);
-        this.textAnswerReveal.value(true);
+        this.showPrompt.value("showPromptNext");
+        this.showAnswer.value("showAnswerReveal");
         this.sayPrompt.value(false);
         this.sayAnswer.value(false);
         this.randomizeOrder.value(true);
@@ -285,10 +279,8 @@ class Options {
     };
 
     bindDynamicOptions = () => {
-        this.textPromptNext.change(toggleTextPromptVisibility);
-        this.textPromptReveal.change(toggleTextPromptVisibility);
-        this.textAnswerNext.change(toggleTextAnswerVisibility);
-        this.textAnswerReveal.change(toggleTextAnswerVisibility);
+        this.showPrompt.change(toggleTextPromptVisibility);
+        this.showAnswer.change(toggleTextPromptVisibility);
 
         $("#optionsPanel input").change(changeOption);
         $("#optionsPanel select").change(changeOption);
@@ -1182,47 +1174,38 @@ const toggleWord = (holder, hider, show) => {
     toggleVisibility(hider, !show);
 };
 
-const toggleTextHolder = (holder, hider) => {
-    if (app.playthrough.state === PlaythroughState.AfterNext) {
-        toggleWord(holder, hider, app.options.textPromptNext.value());
-
-    } else if (app.playthrough.state === PlaythroughState.AfterReveal) {
-        toggleWord(holder, hider, app.options.textPromptReveal.value());
-    }
-};
-
 const toggleTextPromptVisibility = () => {
-    let validState = [
+    let optionOne = [
         app.playthrough.state === PlaythroughState.AfterNext,
-        app.playthrough.state === PlaythroughState.AfterReveal
-    ].some(Boolean);
-
-    let show = [
-        validState,
-        app.options.textPromptNext.value()
+        app.options.showPrompt.value() === 'showPromptNext'
     ].every(Boolean);
 
-    toggleWord($("#prompt"), $("#promptHider"), show);
+    let optionTwo = [
+        app.playthrough.state === PlaythroughState.AfterReveal,
+        [
+            app.options.showPrompt.value() === 'showPromptNext',
+            app.options.showPrompt.value() === 'showPromptReveal'
+        ].some(Boolean)
+    ].every(Boolean);
+
+    toggleWord($("#prompt"), $("#promptHider"), optionOne || optionTwo);
 };
 
 const toggleTextAnswerVisibility = () => {
     let optionOne = [
         app.playthrough.state === PlaythroughState.AfterNext,
-        app.options.textAnswerNext.value()
+        app.options.showAnswer.value() === 'showAnswerNext'
     ].every(Boolean);
 
     let optionTwo = [
         app.playthrough.state === PlaythroughState.AfterReveal,
-        app.options.textAnswerReveal.value()
+        [
+            app.options.showAnswer.value() === 'showAnswerNext',
+            app.options.showAnswer.value() === 'showAnswerReveal'
+        ].some(Boolean)
     ].every(Boolean);
 
-
-
-    let show = [
-        app.playthrough.state === PlaythroughState.AfterReveal,
-        app.options.textPromptNext.value()
-    ].every(Boolean);
-    toggleTextHolder($("#answer"), $("#answerHider"));
+    toggleWord($("#answer"), $("#answerHider"), optionOne || optionTwo);
 };
 
 const displaySamples = () => {
@@ -1602,8 +1585,9 @@ const updateCopyright = () => {
 const initialize = () => {
     updateCopyright();
 
-    stage = new _Stage();
+    stage  = new _Stage();
     addScenes();
+    stage.show("game");
 
     app = new App();
     app.setupDefault();
@@ -1614,9 +1598,6 @@ const initialize = () => {
     bind();
 
     updateVoiceOptions();
-
-    addScenes();
-    stage.show("game");
 
     readDataFromURL();
 };
@@ -1636,7 +1617,6 @@ defaultDeck.languagePrompts = "fr-ca";
 defaultDeck.languageAnswers = "en-us";
 
 let stage;
-let app;
-let options;
+let app = null;
 
 $(document).ready(initialize);
