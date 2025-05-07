@@ -2,1572 +2,1632 @@ const defaultCSVDelimiter = ",";
 const speech = window.speechSynthesis;
 
 class App {
-  options;
-  deck;
-  playthrough;
+    options;
+    deck;
+    playthrough;
 
-  voiceLanguages;
+    voiceLanguages;
 
-  data;
-  uploadedFilename;
+    data;
+    uploadedFilename;
 
-  shareURL = "";
-  copyToast = null;
+    shareURL = "";
+    copyToast = null;
 
-  constructor() {
-    this.options = new Options();
-  }
+    constructor() {
+        this.options = new Options();
+    }
 
-  setupDefault = () => {
-    this.deck = defaultDeck.copy();
-    this.playthrough = new Playthrough(this.deck);
-  }
+    setupDefault = () => {
+        this.deck = defaultDeck.copy();
+        this.playthrough = new Playthrough();
+        this.playthrough.restart();
+    }
 
-  canReset = () => {}
+    canReset = () => {
+        return true; // TODO ??
+    }
 
-  reset = () => {
-    speech.cancel(); // JIC I guess?
+    reset = () => {
+        speech.cancel(); // JIC I guess?
+        toggleControl($("#btnReset"), false);
 
-    this.shareURL = "";
-    this.copyToast = null;
+        this.shareURL = "";
+        this.copyToast = null;
 
-    this.data = {};
-    this.uploadedFilename = "";
+        this.data = {};
+        this.uploadedFilename = "";
 
-    this.voiceLanguages = {};
+        this.voiceLanguages = {};
 
-    this.deck = null;
-    this.playthrough = null;
+        this.deck = null;
+        this.playthrough = null;
 
-    this.setupDefault();
-  }
+        this.setupDefault();
+    }
 }
 
 class Deck {
-  dictionary;
-  title;
-  sourceName;
-  sourceURL;
-  languagePrompts;
-  languageAnswers;
+    dictionary;
+    title;
+    sourceName;
+    sourceURL;
+    languagePrompts;
+    languageAnswers;
 
-  copy = () => {
-    let d = new Deck();
-    d.dictionary = JSON.parse(JSON.stringify(this.dictionary));
+    copy = () => {
+        let d = new Deck();
+        d.dictionary = JSON.parse(JSON.stringify(this.dictionary));
 
-    d.title = this.title;
-    d.sourceName = this.sourceName;
-    d.sourceURL = this.sourceURL;
-    d.languagePrompts = this.languagePrompts;
-    d.languageAnswers = this.languageAnswers;
+        d.title = this.title;
+        d.sourceName = this.sourceName;
+        d.sourceURL = this.sourceURL;
+        d.languagePrompts = this.languagePrompts;
+        d.languageAnswers = this.languageAnswers;
 
-    return d;
-  }
+        return d;
+    }
 
-  invert = () => {
-    this.dictionary = Tools.swapObjectKeys(this.dictionary);
-    return this;
-  }
+    invert = () => {
+        this.dictionary = Tools.swapObjectKeys(this.dictionary);
+        return this;
+    }
 }
 
 const PlaythroughState = {
-  NotStarted: "NotStarted",
-  ShowingPrompt: "ShowingPrompt",
-  ShowingReveal: "ShowingReveal"
+    Uninitialized: "Uninitialized",
+    InitializedButNotStarted: "InitializedButNotStarted",
+    AfterNext: "AfterNext",
+    AfterReveal: "AfterReveal"
 }
 
 class Playthrough {
-  order;
-  index;
-  prompt;
-  answer;
-  state;
+    order;
+    index;
+    prompt;
+    answer;
+    state;
 
-  constructor() {
-    this.restart();
-  }
-
-  updateOrder = () => {
-    this.order = [];
-
-    for (let i = 0; i < Object.keys(app.deck.dictionary).length; i++) {
-      this.order.push(i);
+    constructor() {
+        this.state = PlaythroughState.Uninitialized;
+        this.order = [];
+        this.clearCard();
     }
 
-    if (app.options.randomizeOrder.value()) {
-      this.order = Tools.shuffle(this.order);
-    }
-  }
+    updateOrder = () => {
+        this.order = [];
 
-  updateCard = () => {
-    let i = this.order[this.index];
-    let keys = Object.keys(app.deck.dictionary);
-    this.prompt = keys[i];
-    this.answer = app.deck.dictionary[this.prompt];
-  }
+        for (let i = 0; i < Object.keys(app.deck.dictionary).length; i++) {
+            this.order.push(i);
+        }
 
-  clearCard = () => {
-    this.index = -1;
-    this.prompt = "";
-    this.answer = "";
-  }
-
-  canNext = () => {
-    return this.index < (this.order.length - 1);
-  }
-
-  canPrevious = () => {
-    return this.index > -1;
-  }
-
-  canReveal = () => {
-    if (app.options.textPromptNext.value() && app.options.textPromptReveal.value()) {
-      return false;
-    } else {
-      return this.state === PlaythroughState.ShowingPrompt;
-    }
-  }
-
-  canRestart = () => {
-    return this.canPrevious();
-  }
-
-  sayPrompt = () => {
-    if (app.options.sayPrompt.value()) {
-      speech.cancel();
-      let voice = $("#optVoicePrompts").val(); // TODO
-      sayUtterance(prompt, voice, app.options.voicePromptsRate.value() / 100);
-    }
-  }
-
-  sayReveal = () => {
-    if (app.options.sayAnswer.value()) {
-      speech.cancel();
-      let voice = $("#optVoiceAnswers").val(); // TODO
-      sayUtterance(this.answer, voice, app.options.voiceAnswersRate.value() / 100);
-    }
-  }
-
-  next = () => {
-    if (app.options.textAnswerNext.value()) {
-      this.state = PlaythroughState.ShowingReveal;
-    } else {
-      this.state = PlaythroughState.ShowingPrompt;
+        if (app.options.randomizeOrder.value()) {
+            this.order = Tools.shuffle(this.order);
+        }
     }
 
-    this.index++;
-    this.updateCard();
-
-    // TODO What if they have show answer on next and read aloud on reveal?
-    this.sayPrompt();
-
-    updateDisplay();
-    updateGameControls();
-  };
-
-  previous = () => {
-    if (this.index === 0) {
-      this.state = PlaythroughState.NotStarted;
+    updateCard = () => {
+        let i = this.order[this.index];
+        let keys = Object.keys(app.deck.dictionary);
+        this.prompt = keys[i];
+        this.answer = app.deck.dictionary[this.prompt];
     }
 
-    this.index--;
-    this.updateCard();
+    clearCard = () => {
+        this.index = -1;
+        this.prompt = "";
+        this.answer = "";
+    }
 
-    this.sayPrompt();
+    canNext = () => {
+        return this.index < (this.order.length - 1);
+    }
 
-    updateDisplay();
-    updateGameControls();
-  }
+    canPrevious = () => {
+        return this.index > -1;
+    }
 
-  reveal = () => {
-    this.state = PlaythroughState.ShowingReveal;
+    canReveal = () => {
+        return this.state === PlaythroughState.AfterNext;
+    }
 
-    this.sayReveal();
+    canRestart = () => {
+        return this.canPrevious();
+    }
 
-    updateDisplay();
-    updateGameControls();
-  };
+    sayPrompt = () => {
+        if (app.options.sayPrompt.value()) {
+            speech.cancel();
+            let voice = $("#optVoicePrompts").val(); // TODO
+            sayUtterance(prompt, voice, app.options.voicePromptsRate.value() / 100);
+        }
+    }
 
-  restart = () => {
-    this.state = PlaythroughState.NotStarted;
+    sayReveal = () => {
+        if (app.options.sayAnswer.value()) {
+            speech.cancel();
+            let voice = $("#optVoiceAnswers").val(); // TODO
+            sayUtterance(this.answer, voice, app.options.voiceAnswersRate.value() / 100);
+        }
+    }
 
-    this.clearCard();
-    this.updateOrder();
+    next = () => {
+        if (app.options.textAnswerNext.value()) {
+            this.state = PlaythroughState.AfterReveal;
+        } else {
+            this.state = PlaythroughState.AfterNext;
+        }
 
-    speech.cancel();
+        this.index++;
+        this.updateCard();
 
-    updateDisplay();
-    updateGameControls();
-  };
+        // TODO What if they have show answer on next and read aloud on reveal?
+        this.sayPrompt();
+
+        updateDisplay();
+        updateGameControls();
+    };
+
+    previous = () => {
+        if (this.index === 0) {
+            this.state = PlaythroughState.InitializedButNotStarted;
+        } else if (app.options.textAnswerNext.value()) {
+            this.state = PlaythroughState.AfterReveal;
+        } else {
+            this.state = PlaythroughState.AfterNext;
+        }
+
+        this.index--;
+        this.updateCard();
+
+        this.sayPrompt();
+
+        updateDisplay();
+        updateGameControls();
+    }
+
+    reveal = () => {
+        this.state = PlaythroughState.AfterReveal;
+
+        this.sayReveal();
+
+        updateDisplay();
+        updateGameControls();
+    };
+
+    restart = () => {
+        this.state = PlaythroughState.InitializedButNotStarted;
+
+        this.clearCard();
+        this.updateOrder();
+
+        speech.cancel();
+
+        updateDisplay();
+        updateGameControls();
+    };
 }
 
 class Options {
-  // TODO Add option to toggle whether restarting reshuffles order or not
+    // TODO Add option to toggle whether restarting reshuffles order or not
 
-  optionsChanged;
+    optionsChanged;
 
-  volume;
-  textPromptNext;
-  textPromptReveal;
-  textAnswerNext;
-  textAnswerReveal;
-  sayPrompt;
-  sayAnswer;
-  voicePromptsRate;
-  voiceAnswersRate;
-  randomizeOrder;
-  invertDictionary;
-  silentParentheses;
-  silentAlternatives;
+    volume;
+    textPromptNext;
+    textPromptReveal;
+    textAnswerNext;
+    textAnswerReveal;
+    sayPrompt;
+    sayAnswer;
+    voicePromptsRate;
+    voiceAnswersRate;
+    randomizeOrder;
+    invertDictionary;
+    silentParentheses;
+    silentAlternatives;
 
-  constructor() {
-    this.optionsChanged = false;
-    this.createDynamicOptions();
-    this.setDynamicOptionDefaults();
-    this.bindDynamicOptions();
-  }
+    constructor() {
+        this.optionsChanged = false;
+        this.createDynamicOptions();
+        this.setDynamicOptionDefaults();
+        this.bindDynamicOptions();
+    }
 
-  createDynamicOptions = () => {
-    this.volume = new OptionSlider($("#optVolume"));
-    this.volume.min(0);
-    this.volume.max(100);
-    this.volume.step(5);
+    createDynamicOptions = () => {
+        this.volume = new OptionSlider($("#optVolume"));
+        this.volume.min(0);
+        this.volume.max(100);
+        this.volume.step(5);
 
-    this.voicePromptsRate = new OptionSlider($("#optVoicePromptsRate"));
-    this.voicePromptsRate.min(25);
-    this.voicePromptsRate.max(200);
-    this.voicePromptsRate.step(5);
+        this.voicePromptsRate = new OptionSlider($("#optVoicePromptsRate"));
+        this.voicePromptsRate.min(25);
+        this.voicePromptsRate.max(200);
+        this.voicePromptsRate.step(5);
 
-    this.voiceAnswersRate = new OptionSlider($("#optVoiceAnswersRate"));
-    this.voiceAnswersRate.min(25);
-    this.voiceAnswersRate.max(200);
-    this.voiceAnswersRate.step(5);
+        this.voiceAnswersRate = new OptionSlider($("#optVoiceAnswersRate"));
+        this.voiceAnswersRate.min(25);
+        this.voiceAnswersRate.max(200);
+        this.voiceAnswersRate.step(5);
 
-    this.textPromptNext = new OptionCheckbox($("#optTextPromptNext"));
-    this.textAnswerNext = new OptionCheckbox($("#optTextAnswerNext"));
-    this.textPromptReveal = new OptionCheckbox($("#optTextPromptReveal"));
-    this.textAnswerReveal = new OptionCheckbox($("#optTextAnswerReveal"));
-    this.sayPrompt = new OptionCheckbox($("#optSayPrompt"));
-    this.sayAnswer = new OptionCheckbox($("#optSayAnswer"));
-    this.randomizeOrder = new OptionCheckbox($("#optRandomizeOrder"));
-    this.invertDictionary = new OptionCheckbox($("#optInvertDictionary"));
-    this.silentParentheses = new OptionCheckbox($("#optSilentParentheses"));
-    this.silentAlternatives = new OptionCheckbox($("#optSilentAlternatives"));
-  };
+        this.textPromptNext = new OptionCheckbox($("#optTextPromptNext"));
+        this.textAnswerNext = new OptionCheckbox($("#optTextAnswerNext"));
+        this.textPromptReveal = new OptionCheckbox($("#optTextPromptReveal"));
+        this.textAnswerReveal = new OptionCheckbox($("#optTextAnswerReveal"));
+        this.sayPrompt = new OptionCheckbox($("#optSayPrompt"));
+        this.sayAnswer = new OptionCheckbox($("#optSayAnswer"));
+        this.randomizeOrder = new OptionCheckbox($("#optRandomizeOrder"));
+        this.invertDictionary = new OptionCheckbox($("#optInvertDictionary"));
+        this.silentParentheses = new OptionCheckbox($("#optSilentParentheses"));
+        this.silentAlternatives = new OptionCheckbox($("#optSilentAlternatives"));
+    };
 
-  setDynamicOptionDefaults = () => {
-    this.optionsChanged = false;
+    setDynamicOptionDefaults = () => {
+        this.optionsChanged = false;
 
-    this.volume.value(100);
-    this.voicePromptsRate.value(100);
-    this.voiceAnswersRate.value(100);
+        this.volume.value(100);
+        this.voicePromptsRate.value(100);
+        this.voiceAnswersRate.value(100);
 
-    // TODO Make constants for the defaults
-    this.textPromptNext.value(true);
-    this.textPromptReveal.value(true);
-    this.textAnswerNext.value(false);
-    this.textAnswerReveal.value(true);
-    this.sayPrompt.value(false);
-    this.sayAnswer.value(false);
-    this.randomizeOrder.value(true);
-    this.invertDictionary.value(false);
-    this.silentParentheses.value(true);
-    this.silentAlternatives.value(true);
+        // TODO Make constants for the defaults
+        this.textPromptNext.value(true);
+        this.textPromptReveal.value(true);
+        this.textAnswerNext.value(false);
+        this.textAnswerReveal.value(true);
+        this.sayPrompt.value(false);
+        this.sayAnswer.value(false);
+        this.randomizeOrder.value(true);
+        this.invertDictionary.value(false);
+        this.silentParentheses.value(true);
+        this.silentAlternatives.value(true);
 
-    toggleControl($("#btnSetDefaultOptions"), false);
-  };
+        toggleControl($("#btnSetDefaultOptions"), false);
+    };
 
-  bindDynamicOptions = () => {
-    this.textPromptNext.change(toggleTextPromptVisibility);
-    this.textPromptReveal.change(toggleTextPromptVisibility);
-    this.textAnswerNext.change(toggleTextAnswerVisibility);
-    this.textAnswerReveal.change(toggleTextAnswerVisibility);
+    bindDynamicOptions = () => {
+        this.textPromptNext.change(toggleTextPromptVisibility);
+        this.textPromptReveal.change(toggleTextPromptVisibility);
+        this.textAnswerNext.change(toggleTextAnswerVisibility);
+        this.textAnswerReveal.change(toggleTextAnswerVisibility);
 
-    $("#optionsPanel input").change(changeOption);
-    $("#optionsPanel select").change(changeOption);
-    this.voiceAnswersRate.change(changeOption);
-    this.voicePromptsRate.change(changeOption);
+        $("#optionsPanel input").change(changeOption);
+        $("#optionsPanel select").change(changeOption);
+        this.voiceAnswersRate.change(changeOption);
+        this.voicePromptsRate.change(changeOption);
 
-    this.randomizeOrder.change(changeOptionAndRestart);
-    this.invertDictionary.change(invertDictionary);
-    this.silentParentheses.change(changeOption);
-    this.silentAlternatives.change(changeOption);
-  }
+        this.randomizeOrder.change(changeOptionAndRestart);
+        this.invertDictionary.change(invertDictionary);
+        this.silentParentheses.change(changeOption);
+        this.silentAlternatives.change(changeOption);
+    }
 }
 
 class Parser {
-  static parseData = (content, path) => {
-    if (path.endsWith("json")) {
-      return Parser.parseJSON(content);
-    } else if (path.endsWith("txt")) {
-      return Parser.parseTXT(content);
-    } else if (path.endsWith("csv")) {
-      return Parser.parseCSV(content);
-    }
-  };
-
-  static parseJSON = (content) => {
-    // TODO no validation here...
-    return JSON.parse(content);
-  };
-
-  static parseCSV = (content) => {
-    return Parser._parseCSVlike(content, defaultCSVDelimiter);
-  };
-
-  static parseTXT = (content) => {
-    let delim = Parser.detectDelimiter(content);
-    return Parser._parseCSVlike(content, delim);
-  };
-
-  static breakPieces = (line, delim) => {
-    let re_pieces = `/"(.+?)"${delim}"(.+?)"/`;
-    let result = re_pieces.exec(line);
-    return [Parser.cleanCell(result[1]), Parser.cleanCell(result[2])];
-  };
-
-  static _parseCSVlike = (content, delim) => {
-    let _dictionary = {};
-    let _title = "";
-    let _sourceName = "";
-    let _sourceURL = "";
-
-    let pieces = [];
-    let firstPiece = "";
-    let firstPieceLower = "";
-    let lastPiece = "";
-    let _languagePrompts, _languageAnswers;
-
-    for (let line of content.split(/\r?\n/)) {
-      if (line.trim().length < 1) {
-        continue;
-      }
-
-      line = line.trim();
-
-      if (line.startsWith(`"`) && line.endsWith(`"`)) {
-        pieces = Parser.breakPieces(line, delim);
-      } else {
-        pieces = line.split(delim);
-      }
-
-      firstPiece = Parser.cleanCell(pieces[0]);
-      lastPiece = Parser.cleanCell(pieces[pieces.length - 1]);
-
-      firstPieceLower = firstPiece.toLowerCase();
-      if (["_title", "_t"].includes(firstPieceLower)) {
-        _title = lastPiece;
-      } else if (["_source", "_src"].includes(firstPieceLower)) {
-        _sourceName = lastPiece;
-      } else if (["_sourceurl", "_url"].includes(firstPieceLower)) {
-        _sourceURL = lastPiece;
-      } else if (["_languageprompts", "_lngp"].includes(firstPieceLower)) {
-        _languagePrompts = lastPiece.toLowerCase();
-        // $("#optLanguagePrompts").val(languagePrompts).change();
-      } else if (["_languageAnswers", "_lnga"].includes(firstPieceLower)) {
-        _languageAnswers = lastPiece.toLowerCase();
-        // $("#optLanguageAnswers").val(languageAnswers).change();
-      } else {
-        _dictionary[firstPiece] = lastPiece;
-      }
-    }
-
-    return {
-      dictionary: _dictionary,
-      title: _title,
-      sourceName: _sourceName,
-      sourceURL: _sourceURL,
-      delimiter: delim,
-      languagePrompts: _languagePrompts,
-      languageAnswers: _languageAnswers
+    static parseData = (content, path) => {
+        if (path.endsWith("json")) {
+            return Parser.parseJSON(content);
+        } else if (path.endsWith("txt")) {
+            return Parser.parseTXT(content);
+        } else if (path.endsWith("csv")) {
+            return Parser.parseCSV(content);
+        }
     };
-  };
 
-  static cleanCell = (cell) => {
-    cell = cell.trim();
-    if (cell.startsWith(`"`) && cell.endsWith(`"`)) {
-      cell = cell.slice(1, cell.length - 1);
-    }
+    static parseJSON = (content) => {
+        // TODO no validation here...
+        return JSON.parse(content);
+    };
 
-    return cell;
-  };
+    static parseCSV = (content) => {
+        return Parser._parseCSVlike(content, defaultCSVDelimiter);
+    };
 
-  static detectDelimiter = (
-      text,
-      targetPieces = -1,
-      whitelist = "\t\v:;|,",
-      blacklist = []
-  ) => {
-    let firstLine = text.split(/\r?\n/)[0];
-    if (firstLine.startsWith("SEP=")) {
-      return firstLine.split("=")[1];
-    }
+    static parseTXT = (content) => {
+        let delim = Parser.detectDelimiter(content);
+        return Parser._parseCSVlike(content, delim);
+    };
 
-    if (blacklist.length === 0) {
-      blacklist = "abcdefghijklmnopqrstuvwxyz";
-      blacklist += blacklist.toUpperCase();
-      blacklist += "0123456789.";
-    }
+    static breakPieces = (line, delim) => {
+        let re_pieces = `/"(.+?)"${delim}"(.+?)"/`;
+        let result = re_pieces.exec(line);
+        return [Parser.cleanCell(result[1]), Parser.cleanCell(result[2])];
+    };
 
-    let whitelist2 = "";
-    for (let c of whitelist) {
-      if (!blacklist.includes(c)) {
-        whitelist2 += c;
-      }
-    }
-    whitelist = whitelist2;
+    static _parseCSVlike = (content, delim) => {
+        let _dictionary = {};
+        let _title = "";
+        let _sourceName = "";
+        let _sourceURL = "";
 
-    let candidates = {};
+        let pieces = [];
+        let firstPiece = "";
+        let firstPieceLower = "";
+        let lastPiece = "";
+        let _languagePrompts, _languageAnswers;
 
-    let lines;
-    let pieces;
-    let nPieces;
-    let isViable;
-    let nOccurrences;
+        for (let line of content.split(/\r?\n/)) {
+            if (line.trim().length < 1) {
+                continue;
+            }
 
-    for (let d of whitelist) {
-      isViable = true;
+            line = line.trim();
 
-      // Hmm
-      while (text.includes(d + d)) {
-        text = text.replace(d + d, d);
-      }
+            if (line.startsWith(`"`) && line.endsWith(`"`)) {
+                pieces = Parser.breakPieces(line, delim);
+            } else {
+                pieces = line.split(delim);
+            }
 
-      lines = text.split(/\r?\n/);
-      targetPieces = -1;
-      nOccurrences = 0;
+            firstPiece = Parser.cleanCell(pieces[0]);
+            lastPiece = Parser.cleanCell(pieces[pieces.length - 1]);
 
-      for (let line of lines) {
-        if (line.trim().length < 1) {
-          continue;
+            firstPieceLower = firstPiece.toLowerCase();
+            if (["_title", "_t"].includes(firstPieceLower)) {
+                _title = lastPiece;
+            } else if (["_source", "_src"].includes(firstPieceLower)) {
+                _sourceName = lastPiece;
+            } else if (["_sourceurl", "_url"].includes(firstPieceLower)) {
+                _sourceURL = lastPiece;
+            } else if (["_languageprompts", "_lngp"].includes(firstPieceLower)) {
+                _languagePrompts = lastPiece.toLowerCase();
+                // $("#optLanguagePrompts").val(languagePrompts).change();
+            } else if (["_languageAnswers", "_lnga"].includes(firstPieceLower)) {
+                _languageAnswers = lastPiece.toLowerCase();
+                // $("#optLanguageAnswers").val(languageAnswers).change();
+            } else {
+                _dictionary[firstPiece] = lastPiece;
+            }
         }
 
-        pieces = line.split(d);
+        return {
+            dictionary: _dictionary,
+            title: _title,
+            sourceName: _sourceName,
+            sourceURL: _sourceURL,
+            delimiter: delim,
+            languagePrompts: _languagePrompts,
+            languageAnswers: _languageAnswers
+        };
+    };
 
-        // This is not general purpose because empty cells SHOULD be possible. :(
-        pieces = pieces.filter((p) => {
-          return !!p.trim();
-        });
+    static cleanCell = (cell) => {
+        cell = cell.trim();
+        if (cell.startsWith(`"`) && cell.endsWith(`"`)) {
+            cell = cell.slice(1, cell.length - 1);
+        }
 
-        nPieces = pieces.length;
-        if (nPieces < 2) {
-          isViable = false;
-          break;
+        return cell;
+    };
+
+    static detectDelimiter = (
+        text,
+        targetPieces = -1,
+        whitelist = "\t\v:;|,",
+        blacklist = []
+    ) => {
+        let firstLine = text.split(/\r?\n/)[0];
+        if (firstLine.startsWith("SEP=")) {
+            return firstLine.split("=")[1];
+        }
+
+        if (blacklist.length === 0) {
+            blacklist = "abcdefghijklmnopqrstuvwxyz";
+            blacklist += blacklist.toUpperCase();
+            blacklist += "0123456789.";
+        }
+
+        let whitelist2 = "";
+        for (let c of whitelist) {
+            if (!blacklist.includes(c)) {
+                whitelist2 += c;
+            }
+        }
+        whitelist = whitelist2;
+
+        let candidates = {};
+
+        let lines;
+        let pieces;
+        let nPieces;
+        let isViable;
+        let nOccurrences;
+
+        for (let d of whitelist) {
+            isViable = true;
+
+            // Hmm
+            while (text.includes(d + d)) {
+                text = text.replace(d + d, d);
+            }
+
+            lines = text.split(/\r?\n/);
+            targetPieces = -1;
+            nOccurrences = 0;
+
+            for (let line of lines) {
+                if (line.trim().length < 1) {
+                    continue;
+                }
+
+                pieces = line.split(d);
+
+                // This is not general purpose because empty cells SHOULD be possible. :(
+                pieces = pieces.filter((p) => {
+                    return !!p.trim();
+                });
+
+                nPieces = pieces.length;
+                if (nPieces < 2) {
+                    isViable = false;
+                    break;
+                } else {
+                    if (targetPieces === -1) {
+                        targetPieces = nPieces;
+                    } else if (nPieces !== targetPieces) {
+                        isViable = false;
+                        break;
+                    }
+                }
+
+                nOccurrences += nPieces - 1;
+            }
+
+            if (isViable) {
+                candidates[d] = nOccurrences;
+            }
+        }
+
+        // return the one with the most occurrences
+        if (Object.keys(candidates).length === 0) {
+            // console.log("Could not find any candidate delimiters....");
+            true; //
         } else {
-          if (targetPieces === -1) {
-            targetPieces = nPieces;
-          } else if (nPieces !== targetPieces) {
-            isViable = false;
-            break;
-          }
+            return Object.keys(candidates).reduce((a, b) =>
+                candidates[a] > candidates[b] ? a : b
+            );
         }
-
-        nOccurrences += nPieces - 1;
-      }
-
-      if (isViable) {
-        candidates[d] = nOccurrences;
-      }
-    }
-
-    // return the one with the most occurrences
-    if (Object.keys(candidates).length === 0) {
-      // console.log("Could not find any candidate delimiters....");
-      true; //
-    } else {
-      return Object.keys(candidates).reduce((a, b) =>
-          candidates[a] > candidates[b] ? a : b
-      );
-    }
-  };
+    };
 }
 
 class Downloader {
 
-  static downloadFile = (content, name, type) => {
-    const blob = new Blob([content], { type: type });
-    if (window.navigator.msSaveOrOpenBlob) {
-      window.navigator.msSaveBlob(blob, name);
-    } else {
-      const elem = window.document.createElement(`a`);
-      elem.href = window.URL.createObjectURL(blob);
-      elem.download = name;
-      document.body.appendChild(elem);
-      elem.click();
-      document.body.removeChild(elem);
-    }
-  };
-
-  static prepareAndDownloadFile = (formatter, ext, type) => {
-    let data = compileSaveData();
-    let content = formatter(data);
-    Downloader.downloadFile(content, Downloader.formatFilename(data, ext), type);
-  };
-
-  static downloadJSON = () => {
-    Downloader.prepareAndDownloadFile(JSON.stringify, "json", "application/json");
-  };
-
-  static downloadCSV = () => {
-    Downloader.prepareAndDownloadFile(Downloader.formatCSV, "csv", "text/csv");
-  };
-
-  static downloadTXT = () => {
-    Downloader.prepareAndDownloadFile(Downloader.formatTXT, "txt", "text/plain");
-  };
-
-  static formatDataRow = (data, key, delim, wrap = false) => {
-    if (key in data) {
-      let ukey = "_" + key;
-      let val = data[key];
-      if (wrap) {
-        ukey = `"${ukey}"`;
-        val = `"${val}"`;
-      }
-      return `${ukey}${delim}${val}\n`;
-    } else {
-      return ``;
-    }
-  };
-
-  static formatDictRow = (p, a, delim, wrap = false) => {
-    if (wrap) {
-      p = `"${p}"`;
-      a = `"${a}"`;
-    }
-    return `${p}${delim}${a}\n`;
-  };
-
-  static formatCSV = (data) => {
-    // start with utf-8 BOM
-    let csv = "\ufeff";
-
-    for (let k of [
-      "title",
-      "source",
-      "sourceURL",
-      "languagePrompts",
-      "languageAnswers"
-    ]) {
-      csv += Downloader.formatDataRow(data, k, defaultCSVDelimiter, true);
-    }
-
-    for (const [p, a] of Object.entries(data["dictionary"])) {
-      csv += Downloader.formatDictRow(p, a, defaultCSVDelimiter, true);
-    }
-
-    return csv;
-  };
-
-  static formatTXT = (data) => {
-    let txt = "";
-    let delim = Downloader.chooseDelimiter(data);
-
-    for (let k of [
-      "title",
-      "source",
-      "sourceURL",
-      "languagePrompts",
-      "languageAnswers"
-    ]) {
-      txt += Downloader.formatDataRow(data, k, delim);
-    }
-
-    txt += "\n";
-
-    for (const [p, a] of Object.entries(data["dictionary"])) {
-      txt += Downloader.formatDictRow(p, a, delim);
-    }
-
-    return txt;
-  };
-
-  static formatFilename = (data, ext) => {
-    let filename = "";
-
-    // core element
-    if ("title" in data) {
-      filename = title;
-    } else if ("source" in data) {
-      filename = source;
-    }
-
-    // separate from timestamp
-    if (filename) {
-      filename += " ";
-    }
-
-    // sanitization characters
-    // https://gist.github.com/barbietunnie/7bc6d48a424446c44ff4
-    let illegalRe = /[\/\?<>\\:\*\|"]/g;
-    let controlRe = /[\x00-\x1f\x80-\x9f]/g;
-    let reservedRe = /^\.+$/;
-    let windowsReservedRe = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
-
-    // sanitize
-    filename = filename
-        .replace(illegalRe, "_")
-        .replace(controlRe, "_")
-        .replace(reservedRe, "_")
-        .replace(windowsReservedRe, "_")
-        .slice(0, 245);
-
-    // add timestamp
-    let date = new Date();
-    let offset = date.getTimezoneOffset();
-    date = new Date(date.getTime() - offset * 60 * 1000);
-    let ts = date.toISOString().split("T")[0];
-    filename += ts;
-
-    // add extension
-    return `${filename}.${ext}`;
-  };
-
-  static chooseDelimiter = (data) => {
-    let candidates = "\t,\v:;|";
-
-    let found = false;
-    for (const c of candidates) {
-      for (const [p, a] of Object.entries(data["dictionary"])) {
-        if (p.includes(c) || a.includes(c)) {
-          found = true;
-          break;
+    static downloadFile = (content, name, type) => {
+        const blob = new Blob([content], {type: type});
+        if (window.navigator.msSaveOrOpenBlob) {
+            window.navigator.msSaveBlob(blob, name);
+        } else {
+            const elem = window.document.createElement(`a`);
+            elem.href = window.URL.createObjectURL(blob);
+            elem.download = name;
+            document.body.appendChild(elem);
+            elem.click();
+            document.body.removeChild(elem);
         }
-      }
-      if (!found) {
-        return c;
-      }
-    }
+    };
 
-    // TODO none found -- need to wrap in quotes?
-    return "";
-  };
+    static prepareAndDownloadFile = (formatter, ext, type) => {
+        let data = compileSaveData();
+        let content = formatter(data);
+        Downloader.downloadFile(content, Downloader.formatFilename(data, ext), type);
+    };
+
+    static downloadJSON = () => {
+        Downloader.prepareAndDownloadFile(JSON.stringify, "json", "application/json");
+    };
+
+    static downloadCSV = () => {
+        Downloader.prepareAndDownloadFile(Downloader.formatCSV, "csv", "text/csv");
+    };
+
+    static downloadTXT = () => {
+        Downloader.prepareAndDownloadFile(Downloader.formatTXT, "txt", "text/plain");
+    };
+
+    static formatDataRow = (data, key, delim, wrap = false) => {
+        if (key in data) {
+            let ukey = "_" + key;
+            let val = data[key];
+            if (wrap) {
+                ukey = `"${ukey}"`;
+                val = `"${val}"`;
+            }
+            return `${ukey}${delim}${val}\n`;
+        } else {
+            return ``;
+        }
+    };
+
+    static formatDictRow = (p, a, delim, wrap = false) => {
+        if (wrap) {
+            p = `"${p}"`;
+            a = `"${a}"`;
+        }
+        return `${p}${delim}${a}\n`;
+    };
+
+    static formatCSV = (data) => {
+        // start with utf-8 BOM
+        let csv = "\ufeff";
+
+        for (let k of [
+            "title",
+            "source",
+            "sourceURL",
+            "languagePrompts",
+            "languageAnswers"
+        ]) {
+            csv += Downloader.formatDataRow(data, k, defaultCSVDelimiter, true);
+        }
+
+        for (const [p, a] of Object.entries(data["dictionary"])) {
+            csv += Downloader.formatDictRow(p, a, defaultCSVDelimiter, true);
+        }
+
+        return csv;
+    };
+
+    static formatTXT = (data) => {
+        let txt = "";
+        let delim = Downloader.chooseDelimiter(data);
+
+        for (let k of [
+            "title",
+            "source",
+            "sourceURL",
+            "languagePrompts",
+            "languageAnswers"
+        ]) {
+            txt += Downloader.formatDataRow(data, k, delim);
+        }
+
+        txt += "\n";
+
+        for (const [p, a] of Object.entries(data["dictionary"])) {
+            txt += Downloader.formatDictRow(p, a, delim);
+        }
+
+        return txt;
+    };
+
+    static formatFilename = (data, ext) => {
+        let filename = "";
+
+        // core element
+        if ("title" in data) {
+            filename = title;
+        } else if ("source" in data) {
+            filename = source;
+        }
+
+        // separate from timestamp
+        if (filename) {
+            filename += " ";
+        }
+
+        // sanitization characters
+        // https://gist.github.com/barbietunnie/7bc6d48a424446c44ff4
+        let illegalRe = /[\/\?<>\\:\*\|"]/g;
+        let controlRe = /[\x00-\x1f\x80-\x9f]/g;
+        let reservedRe = /^\.+$/;
+        let windowsReservedRe = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
+
+        // sanitize
+        filename = filename
+            .replace(illegalRe, "_")
+            .replace(controlRe, "_")
+            .replace(reservedRe, "_")
+            .replace(windowsReservedRe, "_")
+            .slice(0, 245);
+
+        // add timestamp
+        let date = new Date();
+        let offset = date.getTimezoneOffset();
+        date = new Date(date.getTime() - offset * 60 * 1000);
+        let ts = date.toISOString().split("T")[0];
+        filename += ts;
+
+        // add extension
+        return `${filename}.${ext}`;
+    };
+
+    static chooseDelimiter = (data) => {
+        let candidates = "\t,\v:;|";
+
+        let found = false;
+        for (const c of candidates) {
+            for (const [p, a] of Object.entries(data["dictionary"])) {
+                if (p.includes(c) || a.includes(c)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return c;
+            }
+        }
+
+        // TODO none found -- need to wrap in quotes?
+        return "";
+    };
 }
 
 const upload = () => {
-  $("#btnUpload").click();
+    $("#btnUpload").click();
 };
 
 const receiveUploadedContent = (content, path) => {
-  app.filename = path.split("\\").pop().split("/").pop().toLowerCase();
-  app.data = Parser.parseData(content, path);
+    app.filename = path.split("\\").pop().split("/").pop().toLowerCase();
+    app.data = Parser.parseData(content, path);
 
-  if (app.data.sourceURL === "") {
-    app.data.sourceURL = "#";
-  }
-  
-  else if (!app.data.sourceURL.startsWith("http")) {
-    app.data.sourceURL = "https://" + data.sourceURL;
-  }
+    if (app.data.sourceURL === "") {
+        app.data.sourceURL = "#";
+    } else if (!app.data.sourceURL.startsWith("http")) {
+        app.data.sourceURL = "https://" + data.sourceURL;
+    }
 
-  setData(app.data.dictionary, app.data.title, app.data.source, app.data.sourceURL);
+    setData(app.data.dictionary, app.data.title, app.data.source, app.data.sourceURL);
 
-  /*
-  TODO Maybe add a settings page for the app (not options for the deck!)
-  where you choose things like default language for unknown decks
-  */
+    /*
+    TODO Maybe add a settings page for the app (not options for the deck!)
+    where you choose things like default language for unknown decks
+    */
 
-  let LP = (app.data.languagePrompts === null) ? defaultDeck.languagePrompts : app.data.languagePrompts;
-  let LA = (app.data.languageAnswers === null) ? defaultDeck.languageAnswers : app.data.languageAnswers;
-  setLanguageData(LP, LA);
+    let LP = (app.data.languagePrompts === null) ? defaultDeck.languagePrompts : app.data.languagePrompts;
+    let LA = (app.data.languageAnswers === null) ? defaultDeck.languageAnswers : app.data.languageAnswers;
+    setLanguageData(LP, LA);
 
-  toggleControl($("#btnReset"), true);
+    toggleControl($("#btnReset"), true);
 };
 
-const reset = () => {
-  if (app.canReset()) {
-    app.reset();
-  }
-
-  setData(defaultDictionary, defaultTitle, defaultSource, defaultSourceURL);  
-  setLanguageData(defaultLanguagePrompts, defaultLanguageAnswers);
-  
-  toggleControl($("#btnReset"), false);
-};
 
 const toggleVisibility = (element, visible) => {
-  if (visible) {
-    element.removeClass("hide");
-  } else {
-    element.addClass("hide");
-  }
+    if (visible) {
+        element.removeClass("hide");
+    } else {
+        element.addClass("hide");
+    }
 }
 
 const toggleControl = (control, enable) => {
-  control.prop("disabled", ! enable);
+    control.prop("disabled", !enable);
 };
 
 const updateGameControls = () => {
-  toggleControl($("#btnNext"), app.playthrough.canNext());
-  toggleControl($("#btnPrevious"), app.playthrough.canPrevious());
-  toggleControl($("#btnReveal"), app.playthrough.canReveal());
-  toggleControl($("#btnRestart"), app.playthrough.canRestart());
+    toggleControl($("#btnNext"), app.playthrough.canNext());
+    toggleControl($("#btnPrevious"), app.playthrough.canPrevious());
+    toggleControl($("#btnReveal"), app.playthrough.canReveal());
+    toggleControl($("#btnRestart"), app.playthrough.canRestart());
 }
 
 const setDictionary = (newDictionary) => {
-  dictionary = JSON.parse(JSON.stringify(newDictionary));
-  restartDictionary();
+    app.deck.dictionary = JSON.parse(JSON.stringify(newDictionary));
+    // restartDictionary();
 
-  $("#infoDenom").text(currentDictionaryOrder.length);
+    $("#infoDenom").text(app.playthrough.order.length);
 };
 
 const setTitle = (_title, _source) => {
-  title = !!_title ? _title : !!_source ? _source : "";
-  title = !!title ? title : "Unknown Flashcard Deck"; // lol
-  $("#title").html(title);
+    title = !!_title ? _title : !!_source ? _source : "";
+    title = !!title ? title : "Unknown Flashcard Deck"; // lol
+    $("#title").html(title);
 };
 
 const setSource = (_title, _source, _URL) => {
-  $("#sourceContainer").html("");
+    $("#sourceContainer").html("");
 
-  source = !!_source ? _source : !!_title ? _title : "";
-  sourceURL = _URL;
+    source = !!_source ? _source : !!_title ? _title : "";
+    sourceURL = _URL;
 
-  if (!source && !sourceURL) {
-    return;
-  }
+    if (!source && !sourceURL) {
+        return;
+    }
 
-  let html = "Source: ";
-  if (!sourceURL) {
-    html += source;
-  } else {
-    let sourceText = !!source ? source : "Link";
-    html += `<a href="${sourceURL}" title="Source">${sourceText}</a>`;
-  }
+    let html = "Source: ";
+    if (!sourceURL) {
+        html += source;
+    } else {
+        let sourceText = !!source ? source : "Link";
+        html += `<a href="${sourceURL}" title="Source">${sourceText}</a>`;
+    }
 
-  html = `<div id="source">${html}</div>`;
-  $("#sourceContainer").append(html);
+    html = `<div id="source">${html}</div>`;
+    $("#sourceContainer").append(html);
 };
-
 
 
 /* Data that does not trigger a restart of the deck */
 const setNonRestartData = (_title, _source, _sourceURL) => {
-  setTitle(_title, _source);
-  setSource(_title, _source, _sourceURL);
-  populateShareURL();
+    setTitle(_title, _source);
+    setSource(_title, _source, _sourceURL);
+    populateShareURL();
 }
 
 /* Data that does trigger a restart of the deck */
 const setRestartData = (_dictionary, skipEditorItems, skipEditorRaw) => {
-  setDictionary(_dictionary);
-  populateShareURL();
-  displaySamples();
-  
-  populateEditorMeta();
-  
-  if (skipEditorItems !== true) {
-    populateEditorItems();
-  }
-  
-  if (skipEditorRaw !== true) {
-    populateEditorRaw();
-  } 
+    setDictionary(_dictionary);
+    populateShareURL();
+    displaySamples();
 
-  restart(true);
+    populateEditorMeta();
 
-  let n = Object.keys(currentDictionary).length;
-  $('#editItemsHeading').html(`Items (${n})`);
+    if (skipEditorItems !== true) {
+        populateEditorItems();
+    }
 
-  toggleControl($("#btnReset"), true);
-  toggleControl($("#btnShare"), true);
+    if (skipEditorRaw !== true) {
+        populateEditorRaw();
+    }
+
+    restart(true);
+
+    let n = Object.keys(currentDictionary).length;
+    $('#editItemsHeading').html(`Items (${n})`);
+
+    toggleControl($("#btnReset"), true);
+    toggleControl($("#btnShare"), true);
 }
 
 const setLanguageData = (newLanguagePrompts, newLanguageAnswers) => {
-  languagePrompts = newLanguagePrompts;
-  languageAnswers = newLanguageAnswers;
-  $('#editLanguagePrompts').val(languagePrompts);
-  $('#editLanguageAnswers').val(languageAnswers);
-  editLanguageField();
+    languagePrompts = newLanguagePrompts;
+    languageAnswers = newLanguageAnswers;
+    $('#editLanguagePrompts').val(languagePrompts);
+    $('#editLanguageAnswers').val(languageAnswers);
+    editLanguageField();
 }
 
 const setData = (_dictionary, _title, _source, _sourceURL) => {
-  setNonRestartData(_title, _source, _sourceURL);
-  setRestartData(_dictionary);  
+    setNonRestartData(_title, _source, _sourceURL);
+    setRestartData(_dictionary);
 };
 
 const populateEditorLanguages = () => {
-  
-  for (let id of ["editLanguagePrompts", "editLanguageAnswers"]) {
-    select = $(`#${id}`);
-    select.empty();
 
-    option = `<option value="--">--</option>`;
-    select.append(option);
+    for (let id of ["editLanguagePrompts", "editLanguageAnswers"]) {
+        select = $(`#${id}`);
+        select.empty();
 
-    for (let lang of Languages) {
-      optionValue = lang['code'].toLowerCase();
-      optionText = lang['name'];
-      option = `<option value="${optionValue}">${optionText}</option>`;
-      select.append(option);
+        option = `<option value="--">--</option>`;
+        select.append(option);
+
+        for (let lang of Languages) {
+            optionValue = lang['code'].toLowerCase();
+            optionText = lang['name'];
+            option = `<option value="${optionValue}">${optionText}</option>`;
+            select.append(option);
+        }
     }
-  } 
-  
-  $('#editLanguagePrompts').val(languagePrompts);
-  $('#editLanguageAnswers').val(languageAnswers);
+
+    $('#editLanguagePrompts').val(languagePrompts);
+    $('#editLanguageAnswers').val(languageAnswers);
 }
 
 const populateEditorMeta = () => {
-  $('#editSource').val(source);
-  $('#editTitle').val(title);
-  $('#editURL').val(sourceURL);
-  
-  populateEditorLanguages();
+    $('#editSource').val(source);
+    $('#editTitle').val(title);
+    $('#editURL').val(sourceURL);
+
+    populateEditorLanguages();
 }
 
 const formatEditorItem = (i, key, val) => {
-  return `<div class='editItem editItemContent flexRow' id='editItem-${i}'><input class='editItemInput editItemPrompt' value='${key}'><input class='editItemInput editItemAnswer' value='${val}'><button class='btnEditDeleteItem buttonBase buttonEffects' id='btnEditDeleteItem-${i}' title='Delete this item'>-</button></div>`;
+    return `<div class='editItem editItemContent flexRow' id='editItem-${i}'><input class='editItemInput editItemPrompt' value='${key}'><input class='editItemInput editItemAnswer' value='${val}'><button class='btnEditDeleteItem buttonBase buttonEffects' id='btnEditDeleteItem-${i}' title='Delete this item'>-</button></div>`;
 }
 
 const formatEditorAddItem = () => {
-  return `<div class='editItem flexRow' id='editItem-Add'><button class='btnEditAddItem buttonBase buttonEffects' id='btnEditAddItem' title='Add a new item'>+</button></div>`;
+    return `<div class='editItem flexRow' id='editItem-Add'><button class='btnEditAddItem buttonBase buttonEffects' id='btnEditAddItem' title='Add a new item'>+</button></div>`;
 }
 
-const populateEditorItems = () => {  
-  $('#editItemsList').html("");
-  
-  let items = "";
-  let val;
-  let i = 0;
-  
-  for (let key of Object.keys(dictionary)) {
-    val = dictionary[key];    
-    items += formatEditorItem(i, key, val);    
-    i += 1;
-  }
-  
-  items += formatEditorAddItem();
-  
-  // paint
-  $('#editItemsList').html(items);
-  
-  // bind
-  $('.editItemInput').keyup(editItemField);
-  $('.editItemInput').change(editItemField);
-  $('#btnEditAddItem').click(editAddItem);
-  $('.btnEditDeleteItem').click(e => {editDeleteItem(e); });
+const populateEditorItems = () => {
+    $('#editItemsList').html("");
+
+    let items = "";
+    let val;
+    let i = 0;
+
+    for (let key of Object.keys(app.deck.dictionary)) {
+        val = app.deck.dictionary[key];
+        items += formatEditorItem(i, key, val);
+        i += 1;
+    }
+
+    items += formatEditorAddItem();
+
+    // paint
+    $('#editItemsList').html(items);
+
+    // bind
+    $('.editItemInput').keyup(editItemField);
+    $('.editItemInput').change(editItemField);
+    $('#btnEditAddItem').click(editAddItem);
+    $('.btnEditDeleteItem').click(e => {
+        editDeleteItem(e);
+    });
 }
 
 const populateEditorRaw = () => {
-  let raw = "";
-  let val;
-  
-  for (let key of Object.keys(dictionary)) {
-    val = dictionary[key];
-    raw += `${key}\t${val}\n`;
-  }
-  
-  $('#editRaw').val(raw.trim());
+    let raw = "";
+    let val;
+
+    for (let key of Object.keys(app.deck.dictionary)) {
+        val = app.deck.dictionary[key];
+        raw += `${key}\t${val}\n`;
+    }
+
+    $('#editRaw').val(raw.trim());
 }
 
 const shareURLIsValid = () => {
-  return shareURL.length <= maxURLLength;
+    return shareURL.length <= maxURLLength;
 };
 
 const createShareURL = () => {
-  let params = formatURLParams();
-  shareURL = `${baseURL}?${params}`;
+    let params = formatURLParams();
+    shareURL = `${baseURL}?${params}`;
 };
 
 const populateShareURL = () => {
-  createShareURL();
+    createShareURL();
 
-  if (shareURLIsValid()) {
-    $("#shareURL").val(shareURL);
-    toggleControl($("#btnCopyShareURL"), true);
-    toggleControl($("#shareURL", true));
-  } else {
-    $("#shareURL").val(
-      "[Too much data for URL encoding. Edit data or download instead.]"
-    );
-    toggleControl($("#btnCopyShareURL"), false);
-    toggleControl($("#shareURL", false));
-  }
+    if (shareURLIsValid()) {
+        $("#shareURL").val(shareURL);
+        toggleControl($("#btnCopyShareURL"), true);
+        toggleControl($("#shareURL", true));
+    } else {
+        $("#shareURL").val(
+            "[Too much data for URL encoding. Edit data or download instead.]"
+        );
+        toggleControl($("#btnCopyShareURL"), false);
+        toggleControl($("#shareURL", false));
+    }
 };
 
 const readDataFromURL = () => {
-  let params = new URLSearchParams(location.search);
-  if (!params.has("d")) {
-    return;
-  }
+    let params = new URLSearchParams(location.search);
+    if (!params.has("d")) {
+        return;
+    }
 
-  let _d = JSON.parse(_decompress(params.get("d")));
-  let _t = params.has("t") ? decodeURIComponent(params.get("t")) : "";
-  let _s = params.has("s") ? decodeURIComponent(params.get("s")) : "";
-  let _u = params.has("u") ? decodeURIComponent(params.get("u")) : "";
+    let _d = JSON.parse(_decompress(params.get("d")));
+    let _t = params.has("t") ? decodeURIComponent(params.get("t")) : "";
+    let _s = params.has("s") ? decodeURIComponent(params.get("s")) : "";
+    let _u = params.has("u") ? decodeURIComponent(params.get("u")) : "";
 
-  if (params.has("lp")) {
-    $("#optLanguagePrompts")
-      .val(decodeURIComponent(params.get("lp").toLowerCase()))
-      .change();
-  }
+    if (params.has("lp")) {
+        $("#optLanguagePrompts")
+            .val(decodeURIComponent(params.get("lp").toLowerCase()))
+            .change();
+    }
 
-  if (params.has("la")) {
-    $("#optLanguageAnswers")
-      .val(decodeURIComponent(params.get("la").toLowerCase()))
-      .change();
-  }
+    if (params.has("la")) {
+        $("#optLanguageAnswers")
+            .val(decodeURIComponent(params.get("la").toLowerCase()))
+            .change();
+    }
 
-  setData(_d, _t, _s, _u);
+    setData(_d, _t, _s, _u);
 };
 
 const compileSaveData = () => {
-  let data = {};
+    let data = {};
 
-  data["dictionary"] = JSON.parse(JSON.stringify(dictionary));
+    data["dictionary"] = JSON.parse(JSON.stringify(dictionary));
 
-  if (title && title !== source) {
-    data["title"] = title;
-  }
+    if (title && title !== source) {
+        data["title"] = title;
+    }
 
-  if (source) {
-    data["source"] = source;
-  }
+    if (source) {
+        data["source"] = source;
+    }
 
-  if (sourceURL) {
-    data["sourceURL"] = sourceURL;
-  }
+    if (sourceURL) {
+        data["sourceURL"] = sourceURL;
+    }
 
-  if (
-    $("#optLanguagePrompts").val() &&
-    $("#optLanguagePrompts").val() !== "--" &&
-    $("#optLanguagePrompts").val() !== defaultDeck.languagePrompts
-  ) {
-    data["languagePrompts"] = $("#optLanguagePrompts").val();
-  }
+    if (
+        $("#optLanguagePrompts").val() &&
+        $("#optLanguagePrompts").val() !== "--" &&
+        $("#optLanguagePrompts").val() !== defaultDeck.languagePrompts
+    ) {
+        data["languagePrompts"] = $("#optLanguagePrompts").val();
+    }
 
-  if (
-    $("#optLanguageAnswers").val() &&
-    $("#optLanguageAnswers").val() !== "--" &&
-    $("#optLanguageAnswers").val() !== defaultDeck.languageAnswers
-  ) {
-    data["languageAnswers"] = $("#optLanguageAnswers").val();
-  }
+    if (
+        $("#optLanguageAnswers").val() &&
+        $("#optLanguageAnswers").val() !== "--" &&
+        $("#optLanguageAnswers").val() !== defaultDeck.languageAnswers
+    ) {
+        data["languageAnswers"] = $("#optLanguageAnswers").val();
+    }
 
-  return data;
+    return data;
 };
 
 const formatURLParams = () => {
-  let _data = compileSaveData();
+    let _data = compileSaveData();
 
-  // compress the dict
+    // compress the dict
 
-  _data["dictionary"] = _compress(JSON.stringify(_data["dictionary"]));
+    _data["dictionary"] = _compress(JSON.stringify(_data["dictionary"]));
 
-  // shorten the URL
+    // shorten the URL
 
-  if ("sourceURL" in _data) {
-    let surl = _data["sourceURL"];
-    if (surl.includes("://")) {
-      surl = surl.split("://")[1];
+    if ("sourceURL" in _data) {
+        let surl = _data["sourceURL"];
+        if (surl.includes("://")) {
+            surl = surl.split("://")[1];
+        }
+        _data["sourceURL"] = surl;
     }
-    _data["sourceURL"] = surl;
-  }
 
-  // encode components
+    // encode components
 
-  if ("title" in _data) {
-    _data["title"] = encodeURIComponent(_data["title"]);
-  }
+    if ("title" in _data) {
+        _data["title"] = encodeURIComponent(_data["title"]);
+    }
 
-  if ("source" in _data) {
-    _data["source"] = encodeURIComponent(_data["source"]);
-  }
+    if ("source" in _data) {
+        _data["source"] = encodeURIComponent(_data["source"]);
+    }
 
-  if ("sourceURL" in _data) {
-    _data["sourceURL"] = encodeURIComponent(_data["sourceURL"]);
-  }
+    if ("sourceURL" in _data) {
+        _data["sourceURL"] = encodeURIComponent(_data["sourceURL"]);
+    }
 
-  // shorten keys
+    // shorten keys
 
-  Tools.renameObjectKeys(_data, {
-    dictionary: "d",
-    sourceURL: "u",
-    title: "t",
-    source: "s",
-    languagePrompts: "lp",
-    languageAnswers: "la"
-  });
+    Tools.renameObjectKeys(_data, {
+        dictionary: "d",
+        sourceURL: "u",
+        title: "t",
+        source: "s",
+        languagePrompts: "lp",
+        languageAnswers: "la"
+    });
 
-  return new URLSearchParams(_data);
+    return new URLSearchParams(_data);
 };
 
 const _compress = (data) => {
-  return LZString.compressToEncodedURIComponent(data);
+    return LZString.compressToEncodedURIComponent(data);
 };
 
 const _decompress = (data) => {
-  return LZString.decompressFromEncodedURIComponent(data);
+    return LZString.decompressFromEncodedURIComponent(data);
 };
 
 const copyShareURL = () => {
-  if (stage.hiding("edit") || !shareURLIsValid()) {
-    return;
-  }
+    if (stage.hiding("edit") || !shareURLIsValid()) {
+        return;
+    }
 
-  copyToast = Copy.toast(copyToast,  $("#shareURL").val(), 'Copied share URL!');
+    copyToast = Copy.toast(copyToast, $("#shareURL").val(), 'Copied share URL!');
 };
 
 const createLanguageOptions = () => {
-  let select, option, optionValue, optionText;
+    let select, option, optionValue, optionText;
 
-  for (let id of ["optLanguagePrompts", "optLanguageAnswers"]) {
-    select = $(`#${id}`);
-    select.empty();
+    for (let id of ["optLanguagePrompts", "optLanguageAnswers"]) {
+        select = $(`#${id}`);
+        select.empty();
 
-    option = `<option value="--">--</option>`;
-    select.append(option);
+        option = `<option value="--">--</option>`;
+        select.append(option);
 
-    for (let lang of voiceLanguages) {
-      optionValue = lang[0];
-      optionText = lang[1];
-      option = `<option value="${optionValue}">${optionText}</option>`;
-      select.append(option);
+        for (let lang of voiceLanguages) {
+            optionValue = lang[0];
+            optionText = lang[1];
+            option = `<option value="${optionValue}">${optionText}</option>`;
+            select.append(option);
+        }
     }
-  }
 };
 
 const updateVoiceLanguages = () => {
-  if (typeof speechSynthesis === "undefined") {
-    return;
-  }
-
-  let niceName = "";
-  let languageToNiceName = {};
-  let languageSet = new Set();
-  let voices = speechSynthesis.getVoices();
-
-  for (let voice of voices) {
-    niceName = voice.lang;
-    if (niceName.includes(" - ")) {
-      niceName = niceName.split(" - ")[1];
+    if (typeof speechSynthesis === "undefined") {
+        return;
     }
 
-    languageToNiceName[voice.lang.toLowerCase()] = niceName;
-    languageSet.add(voice.lang.toLowerCase());
-  }
+    let niceName = "";
+    let languageToNiceName = {};
+    let languageSet = new Set();
+    let voices = speechSynthesis.getVoices();
 
-  voiceLanguages = [];
-  for (let lang of languageSet) {
-    voiceLanguages.push([lang, languageToNiceName[lang]]);
-  }
+    for (let voice of voices) {
+        niceName = voice.lang;
+        if (niceName.includes(" - ")) {
+            niceName = niceName.split(" - ")[1];
+        }
+
+        languageToNiceName[voice.lang.toLowerCase()] = niceName;
+        languageSet.add(voice.lang.toLowerCase());
+    }
+
+    voiceLanguages = [];
+    for (let lang of languageSet) {
+        voiceLanguages.push([lang, languageToNiceName[lang]]);
+    }
 };
 
 const getVoiceOptions = (language) => {
-  if (typeof speechSynthesis === "undefined") {
-    return;
-  }
-
-  let voices = speechSynthesis.getVoices();
-  let voiceOptions = [];
-
-  for (let voice of voices) {
-    if (voice.lang.toLowerCase() === language) {
-      voiceOptions.push(voice);
+    if (typeof speechSynthesis === "undefined") {
+        return;
     }
-  }
 
-  return voiceOptions;
+    let voices = speechSynthesis.getVoices();
+    let voiceOptions = [];
+
+    for (let voice of voices) {
+        if (voice.lang.toLowerCase() === language) {
+            voiceOptions.push(voice);
+        }
+    }
+
+    return voiceOptions;
 };
 
 const createVoiceOptions = (select, language) => {
-  let option, optionValue, optionText;
+    let option, optionValue, optionText;
 
-  let voices = getVoiceOptions(language);
+    let voices = getVoiceOptions(language);
 
-  select.empty();
+    select.empty();
 
-  if (voices.length === 0) {
-    option = `<option value="--">--</option>`;
-    select.append(option);
-  } else {
-    for (let voice of voices) {
-      optionValue = voice.name;
-      optionText = voice.name.split(" - ")[0];
-      option = `<option value="${optionValue}">${optionText}</option>`;
-      select.append(option);
+    if (voices.length === 0) {
+        option = `<option value="--">--</option>`;
+        select.append(option);
+    } else {
+        for (let voice of voices) {
+            optionValue = voice.name;
+            optionText = voice.name.split(" - ")[0];
+            option = `<option value="${optionValue}">${optionText}</option>`;
+            select.append(option);
+        }
+
+        select.val(voices[0].name).change();
     }
-
-    select.val(voices[0].name).change();
-  }
 };
 
 const updateVoicePromptsOptions = () => {
-  createVoiceOptions($("#optVoicePrompts"), $("#optLanguagePrompts").val());
+    createVoiceOptions($("#optVoicePrompts"), $("#optLanguagePrompts").val());
 };
 
 const updateVoiceAnswersOptions = () => {
-  createVoiceOptions($("#optVoiceAnswers"), $("#optLanguageAnswers").val());
+    createVoiceOptions($("#optVoiceAnswers"), $("#optLanguageAnswers").val());
 };
 
 const updateVoiceOptions = () => {
-  updateVoiceLanguages();
-  createLanguageOptions();
-  updateVoicePromptsOptions();
-  setLanguageOptions();
-  updateVoiceAnswersOptions();
+    updateVoiceLanguages();
+    createLanguageOptions();
+    updateVoicePromptsOptions();
+    setLanguageOptions();
+    updateVoiceAnswersOptions();
 };
 
 const getClosestVoiceLanguage = (lang) => {
-  let ids = [];
-  let keys = {};
-  let id, key;
-  
-  for (let tuple of voiceLanguages) {
-    id = tuple[0];
-    key = id.split('-')[0];
-    ids.push(tuple[0]);
-    
-    if (! (key in keys)) {
-      keys[key] = [];
+    let ids = [];
+    let keys = {};
+    let id, key;
+
+    for (let tuple of voiceLanguages) {
+        id = tuple[0];
+        key = id.split('-')[0];
+        ids.push(tuple[0]);
+
+        if (!(key in keys)) {
+            keys[key] = [];
+        }
+        keys[key].push(id);
     }
-    keys[key].push(id);
-  }
-  
-  let langkey = lang.split('-')[0];
-  
-  if (ids.includes(lang)) {
-    return lang;
-  } else {
-    
-      // TODO Probably improve this by just mapping...
-    if (langkey in keys) {
-      return keys[langkey][0];  
+
+    let langkey = lang.split('-')[0];
+
+    if (ids.includes(lang)) {
+        return lang;
     } else {
-      return '--';
-    }    
-  }
+
+        // TODO Probably improve this by just mapping...
+        if (langkey in keys) {
+            return keys[langkey][0];
+        } else {
+            return '--';
+        }
+    }
 }
 
 const setLanguageOptions = () => {
-  let _lp = getClosestVoiceLanguage(languagePrompts);
-  let _la = getClosestVoiceLanguage(languageAnswers);
-  
-  $("#optLanguagePrompts").val(_lp).change();
-  $("#optLanguageAnswers").val(_la).change();
+    let _lp = getClosestVoiceLanguage(app.deck.languagePrompts);
+    let _la = getClosestVoiceLanguage(app.deck.languageAnswers);
+
+    $("#optLanguagePrompts").val(_lp).change();
+    $("#optLanguageAnswers").val(_la).change();
 }
 
 const makeUtterance = (text, voiceName, rate) => {
-  
-  if (optSilentParentheses.value()) {
-    text = text.replace(/\(.*?\)/i, "");
-  }
-  
-  if (optSilentAlternatives.value()) {
-    let re = /\/.*/i;
-    text = text.replace(re, "");
-  }
-  
-  let utterance = new SpeechSynthesisUtterance(text);
-  for (let voice of speech.getVoices()) {
-    if (voice.name === voiceName) {
-      utterance.voice = voice;
-      break;
-    }
-  }
 
-  // TODO
-  utterance.pitch = 1;
-  utterance.rate = rate;
-  utterance.volume = optVolume.value() / 100;
-  return utterance;
+    if (optSilentParentheses.value()) {
+        text = text.replace(/\(.*?\)/i, "");
+    }
+
+    if (optSilentAlternatives.value()) {
+        let re = /\/.*/i;
+        text = text.replace(re, "");
+    }
+
+    let utterance = new SpeechSynthesisUtterance(text);
+    for (let voice of speech.getVoices()) {
+        if (voice.name === voiceName) {
+            utterance.voice = voice;
+            break;
+        }
+    }
+
+    // TODO
+    utterance.pitch = 1;
+    utterance.rate = rate;
+    utterance.volume = optVolume.value() / 100;
+    return utterance;
 };
 
 const sayUtterance = (text, voiceName, rate) => {
-  if (voiceName === "--") {
-    return;
-  }
-  let utterance = makeUtterance(text, voiceName, rate);
-  speech.speak(utterance);
+    if (voiceName === "--") {
+        return;
+    }
+    let utterance = makeUtterance(text, voiceName, rate);
+    speech.speak(utterance);
 };
 
 const toggleWord = (holder, hider, show) => {
-  toggleVisibility(holder, show);
-  toggleVisibility(hider, ! show);
+    toggleVisibility(holder, show);
+    toggleVisibility(hider, !show);
 };
 
 const toggleTextHolder = (holder, hider) => {
-  if (app.playthrough.state === PlaythroughState.ShowingPrompt) {
-    toggleWord(holder, hider, app.options.textPromptNext.value());
+    if (app.playthrough.state === PlaythroughState.AfterNext) {
+        toggleWord(holder, hider, app.options.textPromptNext.value());
 
-  } else if (app.playthrough.state === PlaythroughState.ShowingReveal) {
-    toggleWord(holder, hider, app.options.textPromptReveal.value());
-  }
+    } else if (app.playthrough.state === PlaythroughState.AfterReveal) {
+        toggleWord(holder, hider, app.options.textPromptReveal.value());
+    }
 };
 
 const toggleTextPromptVisibility = () => {
-  toggleTextHolder($("#prompt"), $("#promptHider"));
+    let validState = [
+        app.playthrough.state === PlaythroughState.AfterNext,
+        app.playthrough.state === PlaythroughState.AfterReveal
+    ].some(Boolean);
+
+    let show = [
+        validState,
+        app.options.textPromptNext.value()
+    ].every(Boolean);
+
+    toggleWord($("#prompt"), $("#promptHider"), show);
 };
 
 const toggleTextAnswerVisibility = () => {
-  toggleTextHolder($("#answer"), $("#answerHider"));
+    let optionOne = [
+        app.playthrough.state === PlaythroughState.AfterNext,
+        app.options.textAnswerNext.value()
+    ].every(Boolean);
+
+    let optionTwo = [
+        app.playthrough.state === PlaythroughState.AfterReveal,
+        app.options.textAnswerReveal.value()
+    ].every(Boolean);
+
+
+
+    let show = [
+        app.playthrough.state === PlaythroughState.AfterReveal,
+        app.options.textPromptNext.value()
+    ].every(Boolean);
+    toggleTextHolder($("#answer"), $("#answerHider"));
 };
 
 const displaySamples = () => {
-  let keys = Object.keys(app.deck.dictionary);
-  let sP = keys[0];
-  let sA = app.deck.dictionary[sP];
+    let keys = Object.keys(app.deck.dictionary);
+    let sP = keys[0];
+    let sA = app.deck.dictionary[sP];
 
-  $("#samplePrompt").text(`e.g. "${sP}"`);
-  $("#sampleAnswer").text(`e.g. "${sA}"`);
+    $("#samplePrompt").text(`e.g. "${sP}"`);
+    $("#sampleAnswer").text(`e.g. "${sA}"`);
 };
 
 const invertDictionary = () => {
 
-  let vLP = $("#optLanguagePrompts").val();
-  let vVP = $("#optVoicePrompts").val();
-  let vRP = voicePromptsRate.value();
+    let vLP = $("#optLanguagePrompts").val();
+    let vVP = $("#optVoicePrompts").val();
+    let vRP = app.options.voicePromptsRate.value();
 
-  let vLA = $("#optLanguageAnswers").val();
-  let vVA = $("#optVoiceAnswers").val();
-  let vRA = voiceAnswersRate.value();
+    let vLA = $("#optLanguageAnswers").val();
+    let vVA = $("#optVoiceAnswers").val();
+    let vRA = app.options.voiceAnswersRate.value();
 
-  // TODO
-  $("#optLanguagePrompts").val(vLA).change();
-  $("#optLanguageAnswers").val(vLP).change();
+    // TODO
+    $("#optLanguagePrompts").val(vLA).change();
+    $("#optLanguageAnswers").val(vLP).change();
 
-  updateVoicePromptsOptions();
-  updateVoiceAnswersOptions();
+    updateVoicePromptsOptions();
+    updateVoiceAnswersOptions();
 
-  // TODO
-  $("#optVoicePrompts").val(vVA).change();
-  $("#optVoiceAnswers").val(vVP).change();
+    // TODO
+    $("#optVoicePrompts").val(vVA).change();
+    $("#optVoiceAnswers").val(vVP).change();
 
-  app.options.voicePromptsRate.value(vRA);
-  app.options.voiceAnswersRate.value(vRP);
+    app.options.voicePromptsRate.value(vRA);
+    app.options.voiceAnswersRate.value(vRP);
 
-  // basics
-  app.deck = app.deck.copy().invert();
-  displaySamples();
-  changeOptionAndRestart();
+    // basics
+    app.deck = app.deck.copy().invert();
+    displaySamples();
+    changeOptionAndRestart();
 };
 
 const changeOption = () => {
-  app.options.optionsChanged = true;
-  toggleControl($("#btnSetDefaultOptions"), true);
+    app.options.optionsChanged = true;
+    toggleControl($("#btnSetDefaultOptions"), true);
 };
 
 const changeOptionAndRestart = () => {
-  changeOption();
-  app.playthrough.restart();
+    changeOption();
+    app.playthrough.restart();
 };
 
-const editMetaField = () => {ß
-  let _source = $('#editSource').val().trim();
-  let _title = $('#editTitle').val().trim();
-  let _sourceURL = $('#editURL').val().trim();
-  
-  if (_sourceURL.length === 0) {
-    _sourceURL = "#";
-  }
-  
-  languagePrompts = $('#editLanguagePrompts').val();
-  languageAnswers = $('#editLanguageAnswers').val();
-  
-  setNonRestartData(_source, _title, _sourceURL);
-  toggleControl($("#btnReset"), true);
+const editMetaField = () => {
+    ß
+    let _source = $('#editSource').val().trim();
+    let _title = $('#editTitle').val().trim();
+    let _sourceURL = $('#editURL').val().trim();
+
+    if (_sourceURL.length === 0) {
+        _sourceURL = "#";
+    }
+
+    languagePrompts = $('#editLanguagePrompts').val();
+    languageAnswers = $('#editLanguageAnswers').val();
+
+    setNonRestartData(_source, _title, _sourceURL);
+    toggleControl($("#btnReset"), true);
 }
 
 const editLanguageField = () => {
-  editMetaField();
-  updateVoiceOptions();
+    editMetaField();
+    updateVoiceOptions();
 }
 
 const editItemField = () => {
-  let newDictionary = {};
-  
-  let els = $('.editItemContent');
-  let key, val;
-  
-  els.each(function () {
-    key = $(this).find('.editItemPrompt').val().trim();  
-    val = $(this).find('.editItemAnswer').val().trim();
-    
-    if ((key !== "") && (val !== "")) {
-      newDictionary[key] = val;  
-    }    
-  });
-    
-  setRestartData(newDictionary, true, false);
-  toggleControl($("#btnReset"), true);
+    let newDictionary = {};
+
+    let els = $('.editItemContent');
+    let key, val;
+
+    els.each(function () {
+        key = $(this).find('.editItemPrompt').val().trim();
+        val = $(this).find('.editItemAnswer').val().trim();
+
+        if ((key !== "") && (val !== "")) {
+            newDictionary[key] = val;
+        }
+    });
+
+    setRestartData(newDictionary, true, false);
+    toggleControl($("#btnReset"), true);
 }
 
 const editRawField = () => {
-  let raw = $('#editRaw').val().trim();  
-  let parsed = parseTXT(raw);
-  
-  let newDictionary = parsed['dictionary'];
-  // let newDelimiter = parsed['delimiter'];
-  
-  setRestartData(newDictionary, false, true);
-  toggleControl($("#btnReset"), true);
+    let raw = $('#editRaw').val().trim();
+    let parsed = parseTXT(raw);
+
+    let newDictionary = parsed['dictionary'];
+    // let newDelimiter = parsed['delimiter'];
+
+    setRestartData(newDictionary, false, true);
+    toggleControl($("#btnReset"), true);
 }
 
 const editClearAll = () => {
-  editClearMeta();
-  editClearItems();
+    editClearMeta();
+    editClearItems();
 }
 
 const editClearMeta = () => {
-  $('#editSource').val("");
-  $('#editTitle').val("");
-  $('#editURL').val("#");
-  $('#editLanguagePrompts').val("--");
-  $('#editLanguageAnswers').val("--");
-  editMetaField();
-  editLanguageField();
+    $('#editSource').val("");
+    $('#editTitle').val("");
+    $('#editURL').val("#");
+    $('#editLanguagePrompts').val("--");
+    $('#editLanguageAnswers').val("--");
+    editMetaField();
+    editLanguageField();
 }
 
 const editClearItems = () => {
-  $('.editItemContent').each(function() {
-    this.remove();
-  });
-  editItemField();
+    $('.editItemContent').each(function () {
+        this.remove();
+    });
+    editItemField();
 }
 
 const editClearRaw = () => {
-  $('#editRaw').val("");
-  editRawField();
+    $('#editRaw').val("");
+    editRawField();
 }
 
 const editAddItem = () => {
-  let list = $('#editItemsList');
-  
-  let highest = 0;
-  let current;
-  $('.editItemContent').each(function() {
-    current = parseInt(this.id.split('-')[1]);
-    if (current >= highest) {
-      highest = current + 1;
-    }    
-  });
-  
-  let item = formatEditorItem(highest, "", "");
-  
-  $('#editItem-Add').remove();
-  list.append(item);
-  
-  $('.editItemInput').unbind();
-  $('.editItemInput').keyup(editItemField);
-  $('.editItemInput').change(editItemField);
-  
-  list.append(formatEditorAddItem());
-  $('#btnEditAddItem').click(editAddItem);
-  $('.btnEditDeleteItem').unbind();
-  $('.btnEditDeleteItem').click(e => {editDeleteItem(e); });
+    let list = $('#editItemsList');
+
+    let highest = 0;
+    let current;
+    $('.editItemContent').each(function () {
+        current = parseInt(this.id.split('-')[1]);
+        if (current >= highest) {
+            highest = current + 1;
+        }
+    });
+
+    let item = formatEditorItem(highest, "", "");
+
+    $('#editItem-Add').remove();
+    list.append(item);
+
+    $('.editItemInput').unbind();
+    $('.editItemInput').keyup(editItemField);
+    $('.editItemInput').change(editItemField);
+
+    list.append(formatEditorAddItem());
+    $('#btnEditAddItem').click(editAddItem);
+    $('.btnEditDeleteItem').unbind();
+    $('.btnEditDeleteItem').click(e => {
+        editDeleteItem(e);
+    });
 }
 
 const editDeleteItem = (e) => {
-  $(e.target).remove();
-  // let i = e.target.id.split('-')[1];
-  // let id = `#editItem-${i}`;
-  // $(id).remove();
-  
-  editItemField();
+    $(e.target).remove();
+    // let i = e.target.id.split('-')[1];
+    // let id = `#editItem-${i}`;
+    // $(id).remove();
+
+    editItemField();
 }
 
 const createUploadButton = () => {
-  UploadButton.create(
-      $("#uploadButtonContainer"),
-      receiveUploadedContent,
-      "btnUpload",
-      "buttonBase buttonEffects buttonFooter",
-      "Upload [U]"
-  );
+    UploadButton.create(
+        $("#uploadButtonContainer"),
+        receiveUploadedContent,
+        "btnUpload",
+        "buttonBase buttonEffects buttonFooter",
+        "Upload [U]"
+    );
 };
 
 const createDropzone = () => {
-  DropzoneUniversal.create(
-      $("#app"),
-      receiveUploadedContent,
-      "dropzone",
-      "dropzone"
-  );
+    DropzoneUniversal.create(
+        $("#app"),
+        receiveUploadedContent,
+        "dropzone",
+        "dropzone"
+    );
 };
 
-
-
 updateBeginPanel = () => {
-  toggleVisibility($("#toBeginPanel"), this.state === PlaythroughState.NotStarted);
+    toggleVisibility($("#toBeginPanel"), app.playthrough.state === PlaythroughState.InitializedButNotStarted);
 }
 
 updateCountInfo = () => {
-  $("#infoCount").text(this.index + 1);
+    $("#infoCount").text(app.playthrough.index + 1);
 }
 
 updateDisplay = () => {
-  $("#prompt").text(app.playthrough.prompt);
-  $("#answer").text(app.playthrough.answer);
+    $("#prompt").text(app.playthrough.prompt);
+    $("#answer").text(app.playthrough.answer);
 
-  toggleTextPromptVisibility();
-  toggleTextAnswerVisibility();
+    toggleTextPromptVisibility();
+    toggleTextAnswerVisibility();
 
-  this.updateCountInfo();
-  this.updateBeginPanel();
+    this.updateCountInfo();
+    this.updateBeginPanel();
 }
+
+/* Possibility-checking aliases */
+
+const next = () => {
+    if (app.playthrough.canNext()) {
+        app.playthrough.next();
+    }
+}
+
+const previous = () => {
+    if (app.playthrough.canPrevious()) {
+        app.playthrough.previous();
+    }
+}
+
+const reveal = () => {
+    if (app.playthrough.canReveal()) {
+        app.playthrough.reveal();
+    }
+}
+
+const restart = () => {
+    if (app.playthrough.canRestart()) {
+        app.playthrough.restart();
+    }
+}
+
+const reset = () => {
+    if (app.canReset()) {
+        app.reset();
+    }
+};
+
+/* Binders */
 
 const handleKeyup = (e) => {
 
-  let tag = document.activeElement.tagName;
-  if (["input", "textarea"].includes(tag.toLowerCase()) && (e.code !== "Escape")) {
-    return;
-  }
+    // If we are escaping from a text entry field, don't hide the window... apparently
+    let tag = document.activeElement.tagName;
+    if (["input", "textarea"].includes(tag.toLowerCase()) && (e.code !== "Escape")) {
+        return;
+    }
 
-  switch (e.code) {
-    case "KeyN":
-      next();
-      break;
+    switch (e.code) {
+        case "KeyN":
+            next();
+            break;
 
-    case "KeyP":
-      previous();
-      break;
+        case "KeyP":
+            previous();
+            break;
 
-    case "KeyR":
-      reveal();
-      break;
+        case "KeyR":
+            reveal();
+            break;
 
-    case "KeyX":
-      restart();
-      break;
+        case "KeyX":
+            restart();
+            break;
 
-    case "KeyU":
-      upload();
-      break;
+        case "KeyU":
+            upload();
+            break;
 
-    case "KeyZ":
-      reset();
-      break;
+        case "KeyZ":
+            reset();
+            break;
 
-    case "KeyH":
-      stage.toggle("help");
-      break;
+        case "KeyH":
+            stage.toggle("help");
+            break;
 
-    case "KeyO":
-      stage.toggle("options");
-      break;
+        case "KeyO":
+            stage.toggle("options");
+            break;
 
-    case "KeyS":
-      stage.toggle("share");
-      break;
+        case "KeyS":
+            stage.toggle("share");
+            break;
 
-    case "KeyE":
-      stage.toggle("edit");
-      break;
+        case "KeyE":
+            stage.toggle("edit");
+            break;
 
-    case "KeyD":
-      setDefaultOptions();
-      break;
+        case "KeyD":
+            app.options.setDynamicOptionDefaults();
+            break;
 
-    case "Escape":
-      stage.show('game');
+        case "Escape":
+            stage.show('game');
 
-      if ($("#dropzone").css("display") !== "none") {
-        $("#dropzone").css("display", "none");
-      }
+            if ($("#dropzone").css("display") !== "none") {
+                $("#dropzone").css("display", "none");
+            }
 
-      break;
-  }
+            break;
+    }
 };
 
 const bindGameControls = () => {
-  $("#btnNext").click(next);
-  $("#btnPrevious").click(previous);
-  $("#btnReveal").click(reveal);
-  $("#btnRestart").click(restart);
-  $("#btnReset").click(reset);
+    $("#btnNext").click(next);
+    $("#btnPrevious").click(previous);
+    $("#btnReveal").click(reveal);
+    $("#btnRestart").click(restart);
+    $("#btnReset").click(reset);
 }
 
 const bindShareControls = () => {
-  $("#btnCopyShareURL").click(copyShareURL);
-  $("#btnDownloadJSON").click(downloadJSON);
-  $("#btnDownloadCSV").click(downloadCSV);
-  $("#btnDownloadTXT").click(downloadTXT);
+    $("#btnCopyShareURL").click(copyShareURL);
+    $("#btnDownloadJSON").click(Downloader.downloadJSON);
+    $("#btnDownloadCSV").click(Downloader.downloadCSV);
+    $("#btnDownloadTXT").click(Downloader.downloadTXT);
 }
 
 const bindOptionsControls = () => {
-  $("#btnSetDefaultOptions").click(setDynamicOptionDefaults);
+    $("#btnSetDefaultOptions").click(app.options.setDynamicOptionDefaults());
 }
 
 const bindEditorControls = () => {
-  $('#editSource').keyup(editMetaField);
-  $('#editTitle').keyup(editMetaField);
-  $('#editURL').keyup(editMetaField);
-  $('#editSource').change(editMetaField);
-  $('#editTitle').change(editMetaField);
-  $('#editURL').change(editMetaField);
+    $('#editSource').keyup(editMetaField);
+    $('#editTitle').keyup(editMetaField);
+    $('#editURL').keyup(editMetaField);
+    $('#editSource').change(editMetaField);
+    $('#editTitle').change(editMetaField);
+    $('#editURL').change(editMetaField);
 
-  $('#editLanguagePrompts').change(editLanguageField);
-  $('#editLanguageAnswers').change(editLanguageField);
+    $('#editLanguagePrompts').change(editLanguageField);
+    $('#editLanguageAnswers').change(editLanguageField);
 
-  $('#editRaw').keyup(editRawField);
-  $('#editRaw').change(editRawField);
+    $('#editRaw').keyup(editRawField);
+    $('#editRaw').change(editRawField);
 
-  $('#btnEditClearAll').click(editClearAll);
-  $('#btnEditClearMeta').click(editClearMeta);
-  $('#btnEditClearItems').click(editClearItems);
-  $('#btnEditClearRaw').click(editClearRaw);
-  $('#btnEditSetDefaults').click(reset);
+    $('#btnEditClearAll').click(editClearAll);
+    $('#btnEditClearMeta').click(editClearMeta);
+    $('#btnEditClearItems').click(editClearItems);
+    $('#btnEditClearRaw').click(editClearRaw);
+    $('#btnEditSetDefaults').click(reset);
 }
 
 const bind = () => {
-  bindGameControls();
-  bindShareControls();
-  bindOptionsControls();
-  bindEditorControls();
+    bindGameControls();
+    bindShareControls();
+    bindOptionsControls();
+    bindEditorControls();
 
-  $(document).keyup(handleKeyup);
-  speechSynthesis.onvoiceschanged = updateVoiceOptions;
+    $(document).keyup(handleKeyup);
+    speechSynthesis.onvoiceschanged = updateVoiceOptions;
 };
 
-const addScenes = () => {
-  stage.addScene(
-      new _Scene("game", "#gamePanel", "", [$("#gamePanel button")])
-  );
-  stage.addScene(new _Scene("edit", "#editPanel", "#btnEdit", []));
-  stage.addScene(
-      new _Scene("options", "#optionsPanel", "#btnOptions", [
-        $("#optionsPanel button"),
-        $("#optionsPanel input")
-      ])
-  );
-  stage.addScene(new _Scene("help", "#helpPanel", "#btnHelp", []));
+/* Basics */
 
-  stage.setDefault("game");
+const addScenes = () => {
+    stage.addScene(
+        new _Scene("game", "#gamePanel", "", [$("#gamePanel button")])
+    );
+    stage.addScene(new _Scene("edit", "#editPanel", "#btnEdit", []));
+    stage.addScene(
+        new _Scene("options", "#optionsPanel", "#btnOptions", [
+            $("#optionsPanel button"),
+            $("#optionsPanel input")
+        ])
+    );
+    stage.addScene(new _Scene("help", "#helpPanel", "#btnHelp", []));
+
+    stage.setDefault("game");
 };
 
 const updateCopyright = () => {
-  $('#copyrightYear').text(new Date().getFullYear());
+    $('#copyrightYear').text(new Date().getFullYear());
 }
 
 const initialize = () => {
-  updateCopyright();
+    updateCopyright();
 
-  stage = new _Stage();
-  addScenes();
+    stage = new _Stage();
+    addScenes();
 
-  app = new App();
+    app = new App();
+    app.setupDefault();
 
-  createUploadButton();
-  createDropzone();
+    createUploadButton();
+    createDropzone();
 
-  bind();
+    bind();
 
-  updateVoiceOptions();
+    updateVoiceOptions();
 
-  addScenes();
-  stage.show("game");
+    addScenes();
+    stage.show("game");
 
-  reset();
-  readDataFromURL();
+    readDataFromURL();
 };
 
-// Initial things and startup
+/* Initial things and startup */
 
 const defaultDeck = new Deck();
 defaultDeck.dictionary = {
-  chien: "dog",
-  bonjour: "hello",
-  fille: "girl"
+    chien: "dog",
+    bonjour: "hello",
+    fille: "girl"
 };
 defaultDeck.title = "French Test Deck";
 defaultDeck.sourceName = "French Test Deck";
