@@ -24,7 +24,7 @@ class App {
 
     setDeck = deck => {
         this.deck = deck;
-        this.handleRestartingChange();
+        this.handleDeckChange();
     }
 
     setupDefault = () => {
@@ -52,28 +52,33 @@ class App {
         this.setupDefault();
     }
 
+    handleDeckChange = () => {
+
+        let n = Object.keys(this.deck.dictionary).length;
+        $('#editItemsHeading').text(`Items (${n})`);
+        $('#infoDenom').text(n);
+
+        // populateEditorMeta();
+
+        // if (skipEditorItems !== true) {
+        //     populateEditorItems();
+        // }
+        //
+        // if (skipEditorRaw !== true) {
+        //     populateEditorRaw();
+        // }
+
+        this.handleRestartingChange();
+    }
+
     handleRestartingChange = () => {
-        setDictionary(_dictionary);
-        displaySamples();
-
-        populateEditorMeta();
-
-        if (skipEditorItems !== true) {
-            populateEditorItems();
-        }
-
-        if (skipEditorRaw !== true) {
-            populateEditorRaw();
-        }
-
-        restart(true);
-
-        let n = Object.keys(currentDictionary).length;
-        $('#editItemsHeading').html(`Items (${n})`);
 
         toggleControl($("#btnReset"), true);
         toggleControl($("#btnShare"), true);
 
+        this.playthrough.restart();
+
+        displaySamples();
         this.handleGeneralChange();
     }
 
@@ -91,9 +96,9 @@ class App {
         sourceHTML = `<div id="source">${sourceHTML}</div>`;
         $("#sourceContainer").html(sourceHTML);
 
-        editLanguageField();
+        // editLanguageField();
         updateDisplay();
-        populateShareURL();
+        // populateShareURL();
     }
 }
 
@@ -1375,14 +1380,14 @@ const editDeleteItem = (e) => {
 const createUploadButton = () => {
     UploadButton.bind(
         $("#btnUpload"),
-        handleIncomingFile
+        Receiver.handleIncomingFile
     );
 };
 
 const createDropzone = () => {
     DropzoneUniversal.create(
         $("#app"),
-        handleIncomingFile,
+        Receiver.handleIncomingFile,
         "dropzone",
         "dropzone"
     );
