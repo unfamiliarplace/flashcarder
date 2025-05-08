@@ -28,9 +28,7 @@ class App {
     }
 
     setupDefault = () => {
-        this.deck = defaultDeck.copy();
-        this.playthrough = new Playthrough();
-        this.playthrough.restart();
+        this.setDeck(defaultDeck.copy());
     }
 
     canReset = () => {
@@ -53,32 +51,22 @@ class App {
     }
 
     handleDeckChange = () => {
+        this.playthrough = new Playthrough();
 
         let n = Object.keys(this.deck.dictionary).length;
         $('#editItemsHeading').text(`Items (${n})`);
         $('#infoDenom').text(n);
 
-        // populateEditorMeta();
-
-        // if (skipEditorItems !== true) {
-        //     populateEditorItems();
-        // }
-        //
-        // if (skipEditorRaw !== true) {
-        //     populateEditorRaw();
-        // }
-
+        displaySamples();
+        populateEditor();
         this.handleRestartingChange();
     }
 
     handleRestartingChange = () => {
-
         toggleControl($("#btnReset"), true);
-        toggleControl($("#btnShare"), true);
+        toggleControl($("#btnShare"), true); // TODO ??
 
         this.playthrough.restart();
-
-        displaySamples();
         this.handleGeneralChange();
     }
 
@@ -792,20 +780,20 @@ const populateEditorLanguages = () => {
         }
     }
 
-    $('#editLanguagePrompts').val(languagePrompts);
-    $('#editLanguageAnswers').val(languageAnswers);
+    $('#editLanguagePrompts').val(app.deck.languagePrompts);
+    $('#editLanguageAnswers').val(app.deck.languageAnswers);
 }
 
 const populateEditorMeta = () => {
-    $('#editSource').val(source);
-    $('#editTitle').val(title);
-    $('#editURL').val(sourceURL);
+    $('#editTitle').val(app.deck.title);
+    $('#editSourceName').val(app.deck.sourceName);
+    $('#editSourceURL').val(app.deck.sourceURL);
 
     populateEditorLanguages();
 }
 
 const formatEditorItem = (i, key, val) => {
-    return `<div class='editItem editItemContent flexRow' id='editItem-${i}'><input class='editItemInput editItemPrompt' value='${key}'><input class='editItemInput editItemAnswer' value='${val}'><button class='btnEditDeleteItem buttonBase buttonEffects' id='btnEditDeleteItem-${i}' title='Delete this item'>-</button></div>`;
+    return `<div class='editItem editItemContent flexRow' data-item-index="${i}" id='editItem-${i}'><input class='editItemInput editItemPrompt' value='${key}'><input class='editItemInput editItemAnswer' value='${val}'><button class='btnEditDeleteItem buttonBase buttonEffects' data-item-index="${i}" id='btnEditDeleteItem-${i}' title='Delete this item'>-</button></div>`;
 }
 
 const formatEditorAddItem = () => {
@@ -849,6 +837,12 @@ const populateEditorRaw = () => {
     }
 
     $('#editRaw').val(raw.trim());
+}
+
+const populateEditor = () => {
+    populateEditorMeta();
+    populateEditorItems();
+    populateEditorRaw();
 }
 
 const shareURLIsValid = () => {
@@ -1092,6 +1086,7 @@ const updateVoiceAnswersOptions = () => {
 };
 
 const updateVoiceOptions = () => {
+    return; // TODO
     updateVoiceLanguages();
     createLanguageOptions();
     updateVoicePromptsOptions();
@@ -1261,19 +1256,17 @@ const changeOptionAndRestart = () => {
 };
 
 const editMetaField = () => {
-    ß
-    let _source = $('#editSource').val().trim();
-    let _title = $('#editTitle').val().trim();
-    let _sourceURL = $('#editURL').val().trim();
 
-    if (_sourceURL.length === 0) {
-        _sourceURL = "#";
-    }
+    app.deck.title = $('#editTitle').val().trim();
+    app.deck.sourceName = $('#editSourceName').val().trim();
+    app.deck.sourceURL = $('#editSourceURL').val().trim();
 
-    languagePrompts = $('#editLanguagePrompts').val();
-    languageAnswers = $('#editLanguageAnswers').val();
+    app.deck.languagePrompts = $('#editLanguagePrompts').val();
+    app.deck.languageAnswers = $('#editLanguageAnswers').val();
 
-    setNonRestartData(_source, _title, _sourceURL);
+    app.handleGeneralChange();
+
+    // TODO have this be toggleable too
     toggleControl($("#btnReset"), true);
 }
 
@@ -1283,7 +1276,7 @@ const editLanguageField = () => {
 }
 
 const editItemField = () => {
-    let newDictionary = {};
+    let dict = {};
 
     let els = $('.editItemContent');
     let key, val;
@@ -1293,22 +1286,24 @@ const editItemField = () => {
         val = $(this).find('.editItemAnswer').val().trim();
 
         if ((key !== "") && (val !== "")) {
-            newDictionary[key] = val;
+            dict[key] = val;
         }
     });
 
-    setRestartData(newDictionary, true, false);
+    app.deck.dictionary = dict;
+    app.handleDeckChange();
     toggleControl($("#btnReset"), true);
 }
 
 const editRawField = () => {
     let raw = $('#editRaw').val().trim();
-    let parsed = parseTXT(raw);
+    let parsed = Parser.parseTXT(raw);
 
-    let newDictionary = parsed['dictionary'];
+    let dict = parsed['dictionary'];
     // let newDelimiter = parsed['delimiter'];
 
-    setRestartData(newDictionary, false, true);
+    app.deck.dictionary = dict;
+    app.handleDeckChange();
     toggleControl($("#btnReset"), true);
 }
 
@@ -1318,9 +1313,9 @@ const editClearAll = () => {
 }
 
 const editClearMeta = () => {
-    $('#editSource').val("");
     $('#editTitle').val("");
-    $('#editURL').val("#");
+    $('#editSourceName').val("");
+    $('#editSourceURL').val("");
     $('#editLanguagePrompts').val("--");
     $('#editLanguageAnswers').val("--");
     editMetaField();
@@ -1328,10 +1323,7 @@ const editClearMeta = () => {
 }
 
 const editClearItems = () => {
-    $('.editItemContent').each(function () {
-        this.remove();
-    });
-    editItemField();
+    editClearRaw(); // more efficient :)
 }
 
 const editClearRaw = () => {
@@ -1369,11 +1361,8 @@ const editAddItem = () => {
 }
 
 const editDeleteItem = (e) => {
-    $(e.target).remove();
-    // let i = e.target.id.split('-')[1];
-    // let id = `#editItem-${i}`;
-    // $(id).remove();
-
+    let i = $(e.target).attr('data-item-index');
+    $(`#editItem-${i}`).remove();
     editItemField();
 }
 
@@ -1530,12 +1519,12 @@ const bindOptionsControls = () => {
 }
 
 const bindEditorControls = () => {
-    $('#editSource').keyup(editMetaField);
     $('#editTitle').keyup(editMetaField);
-    $('#editURL').keyup(editMetaField);
-    $('#editSource').change(editMetaField);
+    $('#editSourceName').keyup(editMetaField);
+    $('#editSourceURL').keyup(editMetaField);
     $('#editTitle').change(editMetaField);
-    $('#editURL').change(editMetaField);
+    $('#editSourceName').change(editMetaField);
+    $('#editSourceURL').change(editMetaField);
 
     $('#editLanguagePrompts').change(editLanguageField);
     $('#editLanguageAnswers').change(editLanguageField);
@@ -1604,17 +1593,18 @@ const initialize = () => {
 
 /* Initial things and startup */
 
-const defaultDeck = new Deck();
-defaultDeck.dictionary = {
-    chien: "dog",
-    bonjour: "hello",
-    fille: "girl"
-};
-defaultDeck.title = "French Test Deck";
-defaultDeck.sourceName = "French Test Deck";
-defaultDeck.sourceURL = "#";
-defaultDeck.languagePrompts = "fr-ca";
-defaultDeck.languageAnswers = "en-us";
+const defaultDeck = Deck.fromData({
+    dictionary: {
+        chien: "dog",
+        bonjour: "hello",
+        fille: "girl"
+    },
+    title: "French Test Deck",
+    source: "",
+    sourceURL: "",
+    languagePrompts: "fr-ca",
+    languageAnswers: "en-us"
+});
 
 let stage;
 let app = null;
