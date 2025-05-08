@@ -294,6 +294,17 @@ body {
     top: 100%;
   }
 
+/* Scrollbar */
+
+.hideScrollbar {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hideScrollbar::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
 /* All share stuff */
 
 #shareContent {
@@ -383,37 +394,6 @@ body {
 hr {
   width: 100%;
   border-bottom: 1px solid white;
-}
-
-#copyPingNotification {
-  /* new */
-  position: absolute;
-  
-  z-index: 99;
-  font-style: italic;
-  padding: 10px;
-  pointer-events: none;
-  width: 75px;
-  border-radius: 25px;
-}
-
-#copyPingNotification.pinged {  
-  /* new */
-  background: rgba(255,255,255, 1);
-  color: #000;
-  
-/*   background: rgba(255,255,255, 0.5); */
-/*   color: rgba(255, 255, 255, 1); */
-}
-
-#copyPingNotification:not(.pinged) {  
-  background: rgba(255,255,255, 0);
-  color: rgba(255, 255, 255, 0);
-}
-
-.fade {  
-  transition-duration: 1s;
-  transition-timing-function: linear;
 }
 
 .optionsRow {

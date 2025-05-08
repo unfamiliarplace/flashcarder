@@ -214,9 +214,8 @@
           <div id='editUniversalControlPanel'>
             <div class='editSectionButtons flexRow'><button id='btnEditClearAll' class='buttonBase buttonEffects editClearButton' title='Clear all sections'><i class="fa fa-trash" aria-hidden="true"></i>Clear all</button>
               <button id='btnEditClearMeta' class='buttonBase buttonEffects editClearButton' title='Clear meta section'><i class="fa fa-trash" aria-hidden="true"></i>Clear meta</button>
-              <button id='btnEditClearRaw' class='buttonBase buttonEffects editClearButton' title='Clear item sections'><i class="fa fa-trash" aria-hidden="true"></i>Clear items</button>
-
-              <button id='btnEditSetDefaults' class='buttonBase buttonEffects editClearButton' title='Restore default values'><i class="fa fa-clipboard-list" aria-hidden="true"></i>Defaults</button>
+              <button id='btnEditClearItems' class='buttonBase buttonEffects editClearButton' title='Clear item sections'><i class="fa fa-trash" aria-hidden="true"></i>Clear items</button>
+              <button id='btnEditSetDefaults' class='buttonBase buttonEffects' title='Restore default values'><i class="fa fa-clipboard-list" aria-hidden="true"></i>Defaults</button>
             </div>
           </div>
           <div class='flexRow' id='editSubPanel'>
@@ -262,7 +261,7 @@
             <div id='editItemsPanel'>
               <h2 id='editItemsHeading'>Items</h2>
 
-              <div id='editItemsList' class='flexCol'></div>
+              <div id='editItemsList' class='flexCol hideScrollbar'></div>
             </div>
             <div id='editRawPanel'>
               <h2>Raw Items</h2>

@@ -1,14 +1,3 @@
-const defaultCSVDelimiter = ",";
-
-/*
-TODO Maybe add a settings page for the app (not options for the deck!)
-where you choose things like default language for unknown decks
-*/
-const defaultLanguagePrompts = 'fr-ca';
-const defaultLanguageAnswers = 'en-us';
-
-const speech = window.speechSynthesis;
-
 class App {
     options;
     deck;
@@ -16,27 +5,41 @@ class App {
 
     voiceLanguages;
 
-    copyToast = null;
-
-    constructor() {
-        this.options = new Options();
-    }
-
     setDeck = deck => {
         this.deck = deck;
         this.handleDeckChange();
     }
 
-    setupDefault = () => {
+    setDefault = () => {
         this.setDeck(defaultDeck.copy());
     }
 
-    canReset = () => {
-        return true; // TODO ??
+    deckHasChanged = () => {
+        return (!! this.deck) && (! this.deck.equals(defaultDeck));
+    }
+
+    optionsHaveChanged = () => {
+        return [
+            app.options.volume.value() !== optDefaultVolume,
+            app.options.voicePromptsRate.value() !== optDefaultVoicePromptsRate,
+            app.options.voiceAnswersRate.value() !== optDefaultVoiceAnswersRate,
+
+            app.options.showPrompt.value() !== optDefaultShowPrompt,
+            app.options.showAnswer.value() !== optDefaultShowAnswer,
+            app.options.sayPrompt.value() !== optDefaultSayPrompt,
+            app.options.sayAnswer.value() !== optDefaultSayAnswer,
+
+            app.options.randomizeOrder.value() !== optDefaultRandomizeOrder,
+            app.options.invertDictionary.value() !== optDefaultInvertDictionary,
+            app.options.silentParentheses.value() !== optDefaultSilentParentheses,
+            app.options.silentAlternatives.value() !== optDefaultSilentAlternatives
+
+            // TODO missing the voice selection?
+        ].some(Boolean);
     }
 
     reset = () => {
-        speech.cancel(); // JIC I guess?
+        speechSynthesis.cancel(); // JIC I guess?
 
         this.copyToast = null;
 
@@ -47,7 +50,7 @@ class App {
 
         toggleControl($("#btnReset"), false);
 
-        this.setupDefault();
+        this.setDefault();
     }
 
     handleDeckChange = (editorArgs) => {
@@ -72,22 +75,36 @@ class App {
         this.handleGeneralChange();
     }
 
-    handleGeneralChange = () => {
+    updateTitleDisplay = () => {
         $("#title").text(app.deck.title);
+    }
 
-        let sourceHTML = "Source: ";
-        if (! app.deck.sourceURL) {
-            sourceHTML += app.deck.sourceName;
-        } else {
-            let sourceText = !!app.deck.sourceName ? app.deck.sourceName : "Link";
-            sourceHTML += `<a href="${app.deck.sourceURL}" title="Source">${sourceText}</a>`;
+    updateSourceDisplay = () => {
+        let html = "";
+
+        if (app.deck.sourceName || app.deck.sourceURL) {
+            html += "Source: ";
         }
 
-        sourceHTML = `<div id="source">${sourceHTML}</div>`;
-        $("#sourceContainer").html(sourceHTML);
+        if (! app.deck.sourceURL) {
+            html += app.deck.sourceName;
+        } else {
+            let sourceText = !!app.deck.sourceName ? app.deck.sourceName : "Link";
+            html += `<a href="${app.deck.sourceURL}" title="Source">${sourceText}</a>`;
+        }
+
+        html = `<div id="source">${html}</div>`;
+        $("#sourceContainer").html(html);
+    }
+
+    handleGeneralChange = () => {
+        this.updateTitleDisplay();
+        this.updateSourceDisplay();
+        updateCardDisplay();
+
+        updateControls();
 
         // editLanguageField();
-        updateDisplay();
         // populateShareURL();
     }
 }
@@ -100,26 +117,43 @@ class Deck {
     languagePrompts;
     languageAnswers;
 
-    static fromData = (d) => {
+    static fromData = (data) => {
         let deck = new Deck();
 
-        deck.dictionary = JSON.parse(JSON.stringify(d.dictionary));
-        deck.title = d.title;
-        deck.sourceName = d.sourceName;
-        deck.sourceURL = d.sourceURL;
-        deck.languagePrompts = d.languagePrompts;
-        deck.languageAnswers = d.languageAnswers;
+        deck.dictionary = JSON.parse(JSON.stringify(data.dictionary));
+        deck.title = data.title;
+        deck.sourceName = data.sourceName;
+        deck.sourceURL = data.sourceURL;
+        deck.languagePrompts = data.languagePrompts;
+        deck.languageAnswers = data.languageAnswers;
 
         return deck;
     }
 
     copy = () => {
+        // Works since the data is just an Object like this Deck...
         return Deck.fromData(this);
     }
 
     invert = () => {
+        console.log('inverted');
         this.dictionary = Tools.swapObjectKeys(this.dictionary);
         return this;
+    }
+
+    toData = () => {
+        return {
+            dictionary: this.dictionary,
+            title: this.title,
+            sourceName: this.sourceName,
+            sourceURL: this.sourceURL,
+            languagePrompts: this.languagePrompts,
+            languageAnswers: this.languageAnswers
+        };
+    }
+
+    equals = (other) => {
+        return JSON.stringify(this.toData()) === JSON.stringify(other.toData());
     }
 }
 
@@ -187,12 +221,12 @@ class Playthrough {
     }
 
     canRestart = () => {
-        return this.canPrevious();
+        return this.canPrevious(); // K
     }
 
     sayPrompt = () => {
         if (app.options.sayPrompt.value()) {
-            speech.cancel();
+            speechSynthesis.cancel();
             let voice = $("#optVoicePrompts").val(); // TODO
             let rate = app.options.voicePromptsRate.value() / 100
             sayUtterance(prompt, voice, rate);
@@ -201,7 +235,7 @@ class Playthrough {
 
     sayReveal = () => {
         if (app.options.sayAnswer.value()) {
-            speech.cancel();
+            speechSynthesis.cancel();
             let voice = $("#optVoiceAnswers").val(); // TODO
             let rate = app.options.voiceAnswersRate.value() / 100;
             sayUtterance(this.answer, voice, rate);
@@ -217,8 +251,8 @@ class Playthrough {
         // TODO What if they have show answer on next and read aloud on reveal?
         this.sayPrompt();
 
-        updateDisplay();
-        updateGameControls();
+        updateCardDisplay();
+        updateControls();
     };
 
     previous = () => {
@@ -233,8 +267,8 @@ class Playthrough {
 
         this.sayPrompt();
 
-        updateDisplay();
-        updateGameControls();
+        updateCardDisplay();
+        updateControls();
     }
 
     reveal = () => {
@@ -242,8 +276,8 @@ class Playthrough {
 
         this.sayReveal();
 
-        updateDisplay();
-        updateGameControls();
+        updateCardDisplay();
+        updateControls();
     };
 
     restart = () => {
@@ -252,17 +286,15 @@ class Playthrough {
         this.clearCard();
         this.updateOrder();
 
-        speech.cancel();
+        speechSynthesis.cancel();
 
-        updateDisplay();
-        updateGameControls();
+        updateCardDisplay();
+        updateControls();
     };
 }
 
 class Options {
     // TODO Add option to toggle whether restarting reshuffles order or not
-
-    optionsChanged;
 
     volume;
     showPrompt;
@@ -277,7 +309,6 @@ class Options {
     silentAlternatives;
 
     constructor() {
-        this.optionsChanged = false;
         this.createDynamicOptions();
         this.setDynamicOptionDefaults();
         this.bindDynamicOptions();
@@ -310,23 +341,22 @@ class Options {
     };
 
     setDynamicOptionDefaults = () => {
-        this.optionsChanged = false;
+        this.volume.value(optDefaultVolume);
+        this.voicePromptsRate.value(optDefaultVoicePromptsRate);
+        this.voiceAnswersRate.value(optDefaultVoiceAnswersRate);
 
-        this.volume.value(100);
-        this.voicePromptsRate.value(100);
-        this.voiceAnswersRate.value(100);
+        this.showPrompt.value(optDefaultShowPrompt);
+        this.showAnswer.value(optDefaultShowAnswer);
+        this.sayPrompt.value(optDefaultSayPrompt);
+        this.sayAnswer.value(optDefaultSayAnswer);
 
-        // TODO Make constants for the defaults
-        this.showPrompt.value("showPromptNext");
-        this.showAnswer.value("showAnswerReveal");
-        this.sayPrompt.value(false);
-        this.sayAnswer.value(false);
-        this.randomizeOrder.value(true);
-        this.invertDictionary.value(false);
-        this.silentParentheses.value(true);
-        this.silentAlternatives.value(true);
+        this.randomizeOrder.value(optDefaultRandomizeOrder);
+        this.invertDictionary.value(optDefaultInvertDictionary);
+        this.silentParentheses.value(optDefaultSilentParentheses);
+        this.silentAlternatives.value(optDefaultSilentAlternatives);
 
         toggleControl($("#btnSetDefaultOptions"), false);
+        toggleControl($('#btnReset'), app.deckHasChanged());
     };
 
     bindDynamicOptions = () => {
@@ -339,7 +369,7 @@ class Options {
         this.voicePromptsRate.change(changeOption);
 
         this.randomizeOrder.change(changeOptionAndRestart);
-        this.invertDictionary.change(invertDictionary);
+        this.invertDictionary.change(handleChangeInvertDictionary);
         this.silentParentheses.change(changeOption);
         this.silentAlternatives.change(changeOption);
     }
@@ -362,12 +392,12 @@ class Parser {
     };
 
     static parseCSV = (content) => {
-        return Parser._parseCSVlike(content, defaultCSVDelimiter);
+        return Parser._parseCSVLike(content, defaultCSVDelimiter);
     };
 
     static parseTXT = (content) => {
         let delim = Parser.detectDelimiter(content);
-        return Parser._parseCSVlike(content, delim);
+        return Parser._parseCSVLike(content, delim);
     };
 
     static breakPieces = (line, delim) => {
@@ -376,7 +406,7 @@ class Parser {
         return [Parser.cleanCell(result[1]), Parser.cleanCell(result[2])];
     };
 
-    static _parseCSVlike = (content, delim) => {
+    static _parseCSVLike = (content, delim) => {
         let data = {};
 
         let pieces = [];
@@ -685,34 +715,27 @@ const upload = () => {
 };
 
 class Receiver {
+
     static ameliorateData = (data) => {
 
-        // Source URL protocol
-        if (! data.sourceURL.startsWith("http")) {
-            data.sourceURL = "https://" + data.sourceURL;
-        }
-
-        // Title: if none, use source; if no source, use unknown
         if (! data.title) {
-            if (! data.sourceName) {
-                data.title = "Unknown Flashcard Deck";
-                data.sourceName = "Unknown";
-            } else {
-                data.title = data.sourceName;
-            }
+            data.title = 'Untitled Deck';
         }
 
-        // If title and no source, make source title (should it just be "unknown"?
+        if (!! data.sourceURL) {
+            data.sourceURL = addSourceURLProtocol(sourceURL);
+        }
+
         if (! data.sourceName) {
-            data.sourceName = data.title;
+            data.sourceName = "";
         }
 
         if (! data.languagePrompts) {
-            data.languagePrompts = defaultLanguagePrompts;
+            data.languagePrompts = "--";
         }
 
         if (! data.languageAnswers) {
-            data.languageAnswers = defaultLanguageAnswers;
+            data.languageAnswers = "--";
         }
     }
 
@@ -746,11 +769,25 @@ const toggleControl = (control, enable) => {
     control.prop("disabled", !enable);
 };
 
-const updateGameControls = () => {
+const updateControls = () => {
     toggleControl($("#btnNext"), app.playthrough.canNext());
     toggleControl($("#btnPrevious"), app.playthrough.canPrevious());
     toggleControl($("#btnReveal"), app.playthrough.canReveal());
     toggleControl($("#btnRestart"), app.playthrough.canRestart());
+
+    // minor optimization
+    let deckHasChanged = app.deckHasChanged();
+    let optionsHaveChanged = app.optionsHaveChanged();
+    let editContentExists = !! $('#editRaw').val().trim();
+
+    toggleControl($('#btnReset'), deckHasChanged || optionsHaveChanged);
+    toggleControl($('#btnEditSetDefaults'), deckHasChanged);
+
+    toggleControl($('#btnShare'), editContentExists);
+    toggleControl($('.buttonDownload'), editContentExists);
+    toggleControl($('.editClearButton'), editContentExists);
+
+    toggleControl($('#btnSetDefaultOptions'), optionsHaveChanged);
 }
 
 const populateEditorLanguages = () => {
@@ -886,7 +923,7 @@ const readDataFromURL = () => {
 const compileSaveData = () => {
     let data = {};
 
-    data.dictionary = JSON.parse(JSON.stringify(app.deck.dictionary));
+    data.dictionary = app.deck.dictionary;
 
     if (app.deck.title && (app.deck.title !== app.deck.sourceName)) {
         data["title"] = app.deck.title;
@@ -900,11 +937,11 @@ const compileSaveData = () => {
         data["sourceURL"] = app.deck.sourceURL;
     }
 
-    if (app.deck.languagePrompts !== defaultLanguagePrompts) {
+    if (! ["", "--"].includes(app.deck.languagePrompts)) {
         data["languagePrompts"] = $("#optLanguagePrompts").val();
     }
 
-    if (app.deck.languageAnswers !== defaultLanguageAnswers) {
+    if (! ["", "--"].includes(app.deck.languageAnswers)) {
         data["languagePrompts"] = $("#optLanguagePrompts").val();
     }
 
@@ -1124,7 +1161,7 @@ const makeUtterance = (text, voiceName, rate) => {
     }
 
     let utterance = new SpeechSynthesisUtterance(text);
-    for (let voice of speech.getVoices()) {
+    for (let voice of speechSynthesis.getVoices()) {
         if (voice.name === voiceName) {
             utterance.voice = voice;
             break;
@@ -1143,7 +1180,7 @@ const sayUtterance = (text, voiceName, rate) => {
     }
 
     let utterance = makeUtterance(text, voiceName, rate);
-    speech.speak(utterance);
+    speechSynthesis.speak(utterance);
 };
 
 const toggleWord = (holder, hider, show) => {
@@ -1194,7 +1231,7 @@ const displaySamples = () => {
     $("#sampleAnswer").text(`e.g. "${sA}"`);
 };
 
-const invertDictionary = () => {
+const handleChangeInvertDictionary = () => {
 
     let vLP = $("#optLanguagePrompts").val();
     let vVP = $("#optVoicePrompts").val();
@@ -1225,20 +1262,21 @@ const invertDictionary = () => {
 };
 
 const changeOption = () => {
-    app.options.optionsChanged = true;
-    toggleControl($("#btnSetDefaultOptions"), true);
+    let optionsHaveChanged = app.optionsHaveChanged();
+    toggleControl($('#btnSetDefaultOptions'), optionsHaveChanged);
+    toggleControl($('#btnReset'), optionsHaveChanged || app.deckHasChanged());
 };
 
 const changeOptionAndRestart = () => {
     changeOption();
-    app.playthrough.restart();
+    app.handleRestartingChange();
 };
 
 const editMetaField = () => {
 
     app.deck.title = $('#editTitle').val().trim();
     app.deck.sourceName = $('#editSourceName').val().trim();
-    app.deck.sourceURL = $('#editSourceURL').val().trim();
+    app.deck.sourceURL = Receiver.ameliorateSourceURL($('#editSourceURL').val().trim());
 
     app.deck.languagePrompts = $('#editLanguagePrompts').val();
     app.deck.languageAnswers = $('#editLanguageAnswers').val();
@@ -1304,8 +1342,10 @@ const editClearMeta = () => {
 }
 
 const editClearItems = () => {
-    editClearRaw(); // more efficient :)
-}
+    $('.editItemContent').each(function() {
+        this.remove();
+    });
+    editItemField();}
 
 const editClearRaw = () => {
     $('#editRaw').val("");
@@ -1347,6 +1387,17 @@ const editDeleteItem = (e) => {
     editItemField();
 }
 
+const addSourceURLProtocol = (sourceURL) => {
+    if (! sourceURL) {
+        sourceURL = "";
+    } else {
+        if (! sourceURL.startsWith("http")) {
+            sourceURL = "https://" + sourceURL;
+        }
+    }
+    return sourceURL;
+}
+
 const createUploadButton = () => {
     UploadButton.bind(
         $("#btnUpload"),
@@ -1365,7 +1416,7 @@ const createDropzone = () => {
 
 /* Display updater */
 
-updateDisplay = () => {
+updateCardDisplay = () => {
     $("#prompt").text(app.playthrough.prompt);
     $("#answer").text(app.playthrough.answer);
 
@@ -1408,12 +1459,6 @@ const restart = () => {
     }
 }
 
-const reset = () => {
-    if (app.canReset()) {
-        app.reset();
-    }
-};
-
 /* Binders */
 
 const handleKeyup = (e) => {
@@ -1446,7 +1491,7 @@ const handleKeyup = (e) => {
             break;
 
         case "KeyZ":
-            reset();
+            app.reset();
             break;
 
         case "KeyH":
@@ -1485,7 +1530,7 @@ const bindGameControls = () => {
     $("#btnPrevious").click(previous);
     $("#btnReveal").click(reveal);
     $("#btnRestart").click(restart);
-    $("#btnReset").click(reset);
+    $("#btnReset").click(app.reset);
 }
 
 const bindShareControls = () => {
@@ -1496,7 +1541,7 @@ const bindShareControls = () => {
 }
 
 const bindOptionsControls = () => {
-    $("#btnSetDefaultOptions").click(app.options.setDynamicOptionDefaults());
+    $("#btnSetDefaultOptions").click(app.options.setDynamicOptionDefaults);
 }
 
 const bindEditorControls = () => {
@@ -1517,7 +1562,7 @@ const bindEditorControls = () => {
     $('#btnEditClearMeta').click(editClearMeta);
     $('#btnEditClearItems').click(editClearItems);
     $('#btnEditClearRaw').click(editClearRaw);
-    $('#btnEditSetDefaults').click(reset);
+    $('#btnEditSetDefaults').click(app.setDefault);
 }
 
 const bind = () => {
@@ -1548,19 +1593,22 @@ const addScenes = () => {
     stage.setDefault("game");
 };
 
-const updateCopyright = () => {
+const updateCopyrightDisplay = () => {
     $('#copyrightYear').text(new Date().getFullYear());
 }
 
+// Initialize
+
 const initialize = () => {
-    updateCopyright();
+    updateCopyrightDisplay();
 
     stage = new _Stage();
     addScenes();
     stage.show("game");
 
     app = new App();
-    app.setupDefault();
+    app.options = new Options();
+    app.setDefault();
 
     createUploadButton();
     createDropzone();
@@ -1572,7 +1620,9 @@ const initialize = () => {
     readDataFromURL();
 };
 
-/* Initial things and startup */
+/* Constants */
+
+const defaultCSVDelimiter = ",";
 
 const defaultDeck = Deck.fromData({
     dictionary: {
@@ -1587,7 +1637,20 @@ const defaultDeck = Deck.fromData({
     languageAnswers: "en-us"
 });
 
+const optDefaultVolume = 100;
+const optDefaultShowPrompt = 'showPromptNext';
+const optDefaultShowAnswer = 'showAnswerReveal';
+const optDefaultSayPrompt = false;
+const optDefaultSayAnswer = false;
+const optDefaultVoicePromptsRate = 100;
+const optDefaultVoiceAnswersRate = 100;
+const optDefaultRandomizeOrder = true;
+const optDefaultInvertDictionary = false;
+const optDefaultSilentParentheses = true;
+const optDefaultSilentAlternatives = true;
+
+let copyToast;
 let stage;
-let app = null;
+let app;
 
 $(document).ready(initialize);
