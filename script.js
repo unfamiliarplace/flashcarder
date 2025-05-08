@@ -50,7 +50,9 @@ class App {
         this.setupDefault();
     }
 
-    handleDeckChange = () => {
+    handleDeckChange = (editorArgs) => {
+        if (! editorArgs) { editorArgs = {}; } // JIC
+
         this.playthrough = new Playthrough();
 
         let n = Object.keys(this.deck.dictionary).length;
@@ -58,7 +60,7 @@ class App {
         $('#infoDenom').text(n);
 
         displaySamples();
-        populateEditor();
+        populateEditor(editorArgs);
         this.handleRestartingChange();
     }
 
@@ -192,7 +194,8 @@ class Playthrough {
         if (app.options.sayPrompt.value()) {
             speech.cancel();
             let voice = $("#optVoicePrompts").val(); // TODO
-            sayUtterance(prompt, voice, app.options.voicePromptsRate.value() / 100);
+            let rate = app.options.voicePromptsRate.value() / 100
+            sayUtterance(prompt, voice, rate);
         }
     }
 
@@ -200,7 +203,8 @@ class Playthrough {
         if (app.options.sayAnswer.value()) {
             speech.cancel();
             let voice = $("#optVoiceAnswers").val(); // TODO
-            sayUtterance(this.answer, voice, app.options.voiceAnswersRate.value() / 100);
+            let rate = app.options.voiceAnswersRate.value() / 100;
+            sayUtterance(this.answer, voice, rate);
         }
     }
 
@@ -839,20 +843,17 @@ const populateEditorRaw = () => {
     $('#editRaw').val(raw.trim());
 }
 
-const populateEditor = () => {
+const populateEditor = (args) => {
     populateEditorMeta();
-    populateEditorItems();
-    populateEditorRaw();
+
+    if (! args.skipItems) {
+        populateEditorItems();
+    }
+
+    if (! args.skipRaw) {
+        populateEditorRaw();
+    }
 }
-
-const shareURLIsValid = () => {
-    return shareURL.length <= maxURLLength;
-};
-
-const createShareURL = () => {
-    let params = formatURLParams();
-    shareURL = `${baseURL}?${params}`;
-};
 
 const populateShareURL = () => {
     createShareURL();
@@ -899,34 +900,26 @@ const readDataFromURL = () => {
 const compileSaveData = () => {
     let data = {};
 
-    data["dictionary"] = JSON.parse(JSON.stringify(dictionary));
+    data.dictionary = JSON.parse(JSON.stringify(app.deck.dictionary));
 
-    if (title && title !== source) {
-        data["title"] = title;
+    if (app.deck.title && (app.deck.title !== app.deck.source)) {
+        data["title"] = app.deck.title;
     }
 
-    if (source) {
-        data["source"] = source;
+    if (app.deck.sourceName) {
+        data["sourceName"] = app.deck.sourceName;
     }
 
-    if (sourceURL) {
-        data["sourceURL"] = sourceURL;
+    if (app.deck.sourceURL) {
+        data["sourceURL"] = app.deck.sourceURL;
     }
 
-    if (
-        $("#optLanguagePrompts").val() &&
-        $("#optLanguagePrompts").val() !== "--" &&
-        $("#optLanguagePrompts").val() !== defaultDeck.languagePrompts
-    ) {
+    if (app.deck.languagePrompts !== defaultLanguagePrompts) {
         data["languagePrompts"] = $("#optLanguagePrompts").val();
     }
 
-    if (
-        $("#optLanguageAnswers").val() &&
-        $("#optLanguageAnswers").val() !== "--" &&
-        $("#optLanguageAnswers").val() !== defaultDeck.languageAnswers
-    ) {
-        data["languageAnswers"] = $("#optLanguageAnswers").val();
+    if (app.deck.languageAnswers !== defaultLanguageAnswers) {
+        data["languagePrompts"] = $("#optLanguagePrompts").val();
     }
 
     return data;
@@ -1135,11 +1128,11 @@ const setLanguageOptions = () => {
 
 const makeUtterance = (text, voiceName, rate) => {
 
-    if (optSilentParentheses.value()) {
+    if (app.options.silentParentheses.value()) {
         text = text.replace(/\(.*?\)/i, "");
     }
 
-    if (optSilentAlternatives.value()) {
+    if (app.options.silentAlternatives.value()) {
         let re = /\/.*/i;
         text = text.replace(re, "");
     }
@@ -1152,10 +1145,9 @@ const makeUtterance = (text, voiceName, rate) => {
         }
     }
 
-    // TODO
     utterance.pitch = 1;
     utterance.rate = rate;
-    utterance.volume = optVolume.value() / 100;
+    utterance.volume = app.options.volume.value() / 100;
     return utterance;
 };
 
@@ -1163,6 +1155,7 @@ const sayUtterance = (text, voiceName, rate) => {
     if (voiceName === "--") {
         return;
     }
+
     let utterance = makeUtterance(text, voiceName, rate);
     speech.speak(utterance);
 };
@@ -1290,8 +1283,11 @@ const editItemField = () => {
         }
     });
 
+
+    // TODO need to avoid repopulating items here
+
     app.deck.dictionary = dict;
-    app.handleDeckChange();
+    app.handleDeckChange({'skipItems': true});
     toggleControl($("#btnReset"), true);
 }
 
@@ -1299,11 +1295,10 @@ const editRawField = () => {
     let raw = $('#editRaw').val().trim();
     let parsed = Parser.parseTXT(raw);
 
-    let dict = parsed['dictionary'];
-    // let newDelimiter = parsed['delimiter'];
+    // TODO need to avoid repopulating raw here
 
-    app.deck.dictionary = dict;
-    app.handleDeckChange();
+    app.deck.dictionary = parsed['dictionary'];
+    app.handleDeckChange({'skipRaw': true});
     toggleControl($("#btnReset"), true);
 }
 
