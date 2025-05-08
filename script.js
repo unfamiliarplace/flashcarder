@@ -1,4 +1,12 @@
 const defaultCSVDelimiter = ",";
+
+/*
+TODO Maybe add a settings page for the app (not options for the deck!)
+where you choose things like default language for unknown decks
+*/
+const defaultLanguagePrompts = 'fr-ca';
+const defaultLanguageAnswers = 'en-us';
+
 const speech = window.speechSynthesis;
 
 class App {
@@ -8,10 +16,6 @@ class App {
 
     voiceLanguages;
 
-    data;
-    uploadedFilename;
-
-    shareURL = "";
     copyToast = null;
 
     constructor() {
@@ -30,25 +34,21 @@ class App {
 
     reset = () => {
         speech.cancel(); // JIC I guess?
-        toggleControl($("#btnReset"), false);
 
-        this.shareURL = "";
         this.copyToast = null;
-
-        this.data = {};
-        this.uploadedFilename = "";
 
         this.voiceLanguages = {};
 
         this.deck = null;
         this.playthrough = null;
 
+        toggleControl($("#btnReset"), false);
+
         this.setupDefault();
     }
 
-    handleDeckChange = () => {
+    handleRestartingChange = () => {
         setDictionary(_dictionary);
-        populateShareURL();
         displaySamples();
 
         populateEditorMeta();
@@ -68,9 +68,28 @@ class App {
 
         toggleControl($("#btnReset"), true);
         toggleControl($("#btnShare"), true);
+
+        this.handleGeneralChange();
     }
 
-    handleNonDeckChange = () => {
+    handleGeneralChange = () => {
+        $("#title").text(app.deck.title);
+
+        let sourceHTML = "Source: ";
+        if (! app.deck.sourceURL) {
+            sourceHTML += app.deck.sourceName;
+        } else {
+            let sourceText = !!app.deck.sourceName ? app.deck.sourceName : "Link";
+            sourceHTML += `<a href="${app.deck.sourceURL}" title="Source">${sourceText}</a>`;
+        }
+
+        sourceHTML = `<div id="source">${sourceHTML}</div>`;
+        $("#sourceContainer").html(sourceHTML);
+
+        editLanguageField();
+        updateDisplay();
+        populateShareURL();
+    }
 }
 
 class Deck {
@@ -81,17 +100,21 @@ class Deck {
     languagePrompts;
     languageAnswers;
 
+    static fromData = (d) => {
+        let deck = new Deck();
+
+        deck.dictionary = JSON.parse(JSON.stringify(d.dictionary));
+        deck.title = d.title;
+        deck.sourceName = d.sourceName;
+        deck.sourceURL = d.sourceURL;
+        deck.languagePrompts = d.languagePrompts;
+        deck.languageAnswers = d.languageAnswers;
+
+        return deck;
+    }
+
     copy = () => {
-        let d = new Deck();
-        d.dictionary = JSON.parse(JSON.stringify(this.dictionary));
-
-        d.title = this.title;
-        d.sourceName = this.sourceName;
-        d.sourceURL = this.sourceURL;
-        d.languagePrompts = this.languagePrompts;
-        d.languageAnswers = this.languageAnswers;
-
-        return d;
+        return Deck.fromData(this);
     }
 
     invert = () => {
@@ -673,30 +696,56 @@ const upload = () => {
     $("#btnUpload").click();
 };
 
-const receiveUploadedContent = (content, path) => {
-    app.filename = path.split("\\").pop().split("/").pop().toLowerCase();
-    app.data = Parser.parseData(content, path);
+class Receiver {
+    static ameliorateData = (data) => {
 
-    if (app.data.sourceURL === "") {
-        app.data.sourceURL = "#";
-    } else if (!app.data.sourceURL.startsWith("http")) {
-        app.data.sourceURL = "https://" + data.sourceURL;
+        // Source URL protocol
+        if (! data.sourceURL.startsWith("http")) {
+            data.sourceURL = "https://" + data.sourceURL;
+        }
+
+        // Title: if none, use source; if no source, use unknown
+        if (! data.title) {
+            if (! data.sourceName) {
+                data.title = "Unknown Flashcard Deck";
+                data.sourceName = "Unknown";
+            } else {
+                data.title = data.sourceName;
+            }
+        }
+
+        // If title and no source, make source title (should it just be "unknown"?
+        if (! data.sourceName) {
+            data.sourceName = data.title;
+        }
+
+        if (! data.languagePrompts) {
+            data.languagePrompts = defaultLanguagePrompts;
+        }
+
+        if (! data.languageAnswers) {
+            data.languageAnswers = defaultLanguageAnswers;
+        }
     }
 
-    setData(app.data.dictionary, app.data.title, app.data.source, app.data.sourceURL);
+    static handleIncomingData = data => {
+        Receiver.ameliorateData(data);
 
-    /*
-    TODO Maybe add a settings page for the app (not options for the deck!)
-    where you choose things like default language for unknown decks
-    */
+        // Back out if no functional dictionary (cannot be ameliorated...)
+        if (! data.dictionary || (Object.keys(data.dictionary).length === 0)) {
+            return;
+        }
 
-    let LP = (app.data.languagePrompts === null) ? defaultDeck.languagePrompts : app.data.languagePrompts;
-    let LA = (app.data.languageAnswers === null) ? defaultDeck.languageAnswers : app.data.languageAnswers;
-    setLanguageData(LP, LA);
+        // Make deck, set deck, trigger change
+        app.deck = Deck.fromData(data);
+        app.handleRestartingChange();
+    }
 
-    toggleControl($("#btnReset"), true);
-};
-
+    static handleIncomingFile = (content, path) => {
+        let data = Parser.parseData(content, path);
+        Receiver.handleIncomingData(data);
+    };
+}
 
 const toggleVisibility = (element, visible) => {
     if (visible) {
@@ -716,87 +765,6 @@ const updateGameControls = () => {
     toggleControl($("#btnReveal"), app.playthrough.canReveal());
     toggleControl($("#btnRestart"), app.playthrough.canRestart());
 }
-
-const setDictionary = (newDictionary) => {
-    app.deck.dictionary = JSON.parse(JSON.stringify(newDictionary));
-    // restartDictionary();
-
-    $("#infoDenom").text(app.playthrough.order.length);
-};
-
-const setTitle = (_title, _source) => {
-    title = !!_title ? _title : !!_source ? _source : "";
-    title = !!title ? title : "Unknown Flashcard Deck"; // lol
-    $("#title").html(title);
-};
-
-const setSource = (_title, _source, _URL) => {
-    $("#sourceContainer").html("");
-
-    source = !!_source ? _source : !!_title ? _title : "";
-    sourceURL = _URL;
-
-    if (!source && !sourceURL) {
-        return;
-    }
-
-    let html = "Source: ";
-    if (!sourceURL) {
-        html += source;
-    } else {
-        let sourceText = !!source ? source : "Link";
-        html += `<a href="${sourceURL}" title="Source">${sourceText}</a>`;
-    }
-
-    html = `<div id="source">${html}</div>`;
-    $("#sourceContainer").append(html);
-};
-
-
-/* Data that does not trigger a restart of the deck */
-const setNonRestartData = (_title, _source, _sourceURL) => {
-    setTitle(_title, _source);
-    setSource(_title, _source, _sourceURL);
-    populateShareURL();
-}
-
-/* Data that does trigger a restart of the deck */
-const setRestartData = (_dictionary, skipEditorItems, skipEditorRaw) => {
-    setDictionary(_dictionary);
-    populateShareURL();
-    displaySamples();
-
-    populateEditorMeta();
-
-    if (skipEditorItems !== true) {
-        populateEditorItems();
-    }
-
-    if (skipEditorRaw !== true) {
-        populateEditorRaw();
-    }
-
-    restart(true);
-
-    let n = Object.keys(currentDictionary).length;
-    $('#editItemsHeading').html(`Items (${n})`);
-
-    toggleControl($("#btnReset"), true);
-    toggleControl($("#btnShare"), true);
-}
-
-const setLanguageData = (newLanguagePrompts, newLanguageAnswers) => {
-    languagePrompts = newLanguagePrompts;
-    languageAnswers = newLanguageAnswers;
-    $('#editLanguagePrompts').val(languagePrompts);
-    $('#editLanguageAnswers').val(languageAnswers);
-    editLanguageField();
-}
-
-const setData = (_dictionary, _title, _source, _sourceURL) => {
-    setNonRestartData(_title, _source, _sourceURL);
-    setRestartData(_dictionary);
-};
 
 const populateEditorLanguages = () => {
 
