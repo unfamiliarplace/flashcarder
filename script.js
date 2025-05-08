@@ -22,6 +22,11 @@ class App {
         this.options = new Options();
     }
 
+    setDeck = deck => {
+        this.deck = deck;
+        this.handleRestartingChange();
+    }
+
     setupDefault = () => {
         this.deck = defaultDeck.copy();
         this.playthrough = new Playthrough();
@@ -737,8 +742,7 @@ class Receiver {
         }
 
         // Make deck, set deck, trigger change
-        app.deck = Deck.fromData(data);
-        app.handleRestartingChange();
+        app.setDeck(Deck.fromData(data));
     }
 
     static handleIncomingFile = (content, path) => {
@@ -1369,19 +1373,16 @@ const editDeleteItem = (e) => {
 }
 
 const createUploadButton = () => {
-    UploadButton.create(
-        $("#uploadButtonContainer"),
-        receiveUploadedContent,
-        "btnUpload",
-        "buttonBase buttonEffects buttonFooter",
-        "Upload [U]"
+    UploadButton.bind(
+        $("#btnUpload"),
+        handleIncomingFile
     );
 };
 
 const createDropzone = () => {
     DropzoneUniversal.create(
         $("#app"),
-        receiveUploadedContent,
+        handleIncomingFile,
         "dropzone",
         "dropzone"
     );
