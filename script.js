@@ -377,16 +377,12 @@ class Parser {
     };
 
     static _parseCSVlike = (content, delim) => {
-        let _dictionary = {};
-        let _title = "";
-        let _sourceName = "";
-        let _sourceURL = "";
+        let data = {};
 
         let pieces = [];
         let firstPiece = "";
         let firstPieceLower = "";
         let lastPiece = "";
-        let _languagePrompts, _languageAnswers;
 
         for (let line of content.split(/\r?\n/)) {
             if (line.trim().length < 1) {
@@ -406,31 +402,21 @@ class Parser {
 
             firstPieceLower = firstPiece.toLowerCase();
             if (["_title", "_t"].includes(firstPieceLower)) {
-                _title = lastPiece;
+                data.title = lastPiece;
             } else if (["_source", "_src"].includes(firstPieceLower)) {
-                _sourceName = lastPiece;
+                data.sourceName = lastPiece;
             } else if (["_sourceurl", "_url"].includes(firstPieceLower)) {
-                _sourceURL = lastPiece;
+                data.sourceURL = lastPiece;
             } else if (["_languageprompts", "_lngp"].includes(firstPieceLower)) {
-                _languagePrompts = lastPiece.toLowerCase();
-                // $("#optLanguagePrompts").val(languagePrompts).change();
+                data.languagePrompts = lastPiece.toLowerCase();
             } else if (["_languageAnswers", "_lnga"].includes(firstPieceLower)) {
-                _languageAnswers = lastPiece.toLowerCase();
-                // $("#optLanguageAnswers").val(languageAnswers).change();
+                data.languageAnswers = lastPiece.toLowerCase();
             } else {
-                _dictionary[firstPiece] = lastPiece;
+                data.dictionary[firstPiece] = lastPiece;
             }
         }
 
-        return {
-            dictionary: _dictionary,
-            title: _title,
-            sourceName: _sourceName,
-            sourceURL: _sourceURL,
-            delimiter: delim,
-            languagePrompts: _languagePrompts,
-            languageAnswers: _languageAnswers
-        };
+        return data;
     };
 
     static cleanCell = (cell) => {
@@ -902,7 +888,7 @@ const compileSaveData = () => {
 
     data.dictionary = JSON.parse(JSON.stringify(app.deck.dictionary));
 
-    if (app.deck.title && (app.deck.title !== app.deck.source)) {
+    if (app.deck.title && (app.deck.title !== app.deck.sourceName)) {
         data["title"] = app.deck.title;
     }
 
@@ -1595,7 +1581,7 @@ const defaultDeck = Deck.fromData({
         fille: "girl"
     },
     title: "French Test Deck",
-    source: "",
+    sourceName: "",
     sourceURL: "",
     languagePrompts: "fr-ca",
     languageAnswers: "en-us"
