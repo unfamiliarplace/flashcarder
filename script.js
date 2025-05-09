@@ -74,8 +74,8 @@ class App {
         View.updateSourceView();
         View.updateCardView();
 
+        populateShareURL();
         View.updateControls();
-        // populateShareURL();
     }
 }
 
@@ -988,7 +988,7 @@ class View {
         View.toggleControl($('#btnReset'), deckHasChanged || optionsHaveChanged);
         View.toggleControl($('#btnEditSetDefaults'), deckHasChanged);
 
-        View.toggleControl($('#btnShare'), editContentExists); // TODO also needs to check validity of url (length)
+        View.toggleControl($('#btnShare'), () => {editContentExists() && lio.shareURLIsValid(); });
         View.toggleControl($('.buttonDownload'), editContentExists);
         View.toggleControl($('#btnEditClearItems'), editRawExists || editItemsExist);
         View.toggleControl($('#btnEditClearMeta'), editMetaExists || editRawExists || editItemsExist);
@@ -1084,45 +1084,11 @@ class View {
 
 
 const populateShareURL = () => {
-    createShareURL();
-
-    if (shareURLIsValid()) {
-        $("#shareURL").val(shareURL);
-        toggleControl($("#btnCopyShareURL"), true);
-        toggleControl($("#shareURL", true));
+    if (lio.shareURLIsValid()) {
+        $("#shareURL").val(lio.updateShareURL());
     } else {
-        $("#shareURL").val(
-            "[Too much data for URL encoding. Edit data or download instead.]"
-        );
-        toggleControl($("#btnCopyShareURL"), false);
-        toggleControl($("#shareURL", false));
+        $('#shareURL').val("[Too much data for URL encoding. Edit data or download instead.]")
     }
-};
-
-const readDataFromURL = () => {
-    let params = new URLSearchParams(location.search);
-    if (!params.has("d")) {
-        return;
-    }
-
-    let _d = JSON.parse(_decompress(params.get("d")));
-    let _t = params.has("t") ? decodeURIComponent(params.get("t")) : "";
-    let _s = params.has("s") ? decodeURIComponent(params.get("s")) : "";
-    let _u = params.has("u") ? decodeURIComponent(params.get("u")) : "";
-
-    if (params.has("lp")) {
-        $("#optLanguagePrompts")
-            .val(decodeURIComponent(params.get("lp").toLowerCase()))
-            .change();
-    }
-
-    if (params.has("la")) {
-        $("#optLanguageAnswers")
-            .val(decodeURIComponent(params.get("la").toLowerCase()))
-            .change();
-    }
-
-    setData(_d, _t, _s, _u);
 };
 
 const compileSaveData = () => {
@@ -1131,23 +1097,23 @@ const compileSaveData = () => {
     data.dictionary = app.deck.dictionary;
 
     if (app.deck.title && (app.deck.title !== app.deck.sourceName)) {
-        data["title"] = app.deck.title;
+        data.title = app.deck.title;
     }
 
     if (app.deck.sourceName) {
-        data["sourceName"] = app.deck.sourceName;
+        data.sourceName = app.deck.sourceName;
     }
 
     if (app.deck.sourceURL) {
-        data["sourceURL"] = app.deck.sourceURL;
+        data.sourceURL = app.deck.sourceURL;
     }
 
     if (!["", "--"].includes(app.deck.languagePrompts)) {
-        data["languagePrompts"] = $("#optLanguagePrompts").val();
+        data.languagePrompts = app.deck.languagePrompts;
     }
 
     if (!["", "--"].includes(app.deck.languageAnswers)) {
-        data["languagePrompts"] = $("#optLanguagePrompts").val();
+        data.languageAnswers = app.deck.languageAnswers;
     }
 
     return data;
@@ -1664,7 +1630,7 @@ let lio = new LinkIO(
     packLinkData,
     unpackLinkData,
     () => {
-        !app.deckHasChanged();
+        return !app.deckHasChanged();
     }
 );
 
