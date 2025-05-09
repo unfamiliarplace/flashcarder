@@ -1,13 +1,19 @@
 class App {
     options;
     deck;
+    invertedDeck;
     playthrough;
 
     voiceLanguages;
 
     setDeck = deck => {
         this.deck = deck;
+        this.invertedDeck = this.deck.copy().invert();
         this.handleDeckChange();
+    }
+
+    getActiveDeck = () => {
+        return (app.options.invertDictionary.value()) ? app.invertedDeck : app.deck;
     }
 
     setDefault = () => {
@@ -41,8 +47,6 @@ class App {
     reset = () => {
         speechSynthesis.cancel(); // JIC I guess?
 
-        this.copyToast = null;
-
         this.voiceLanguages = {};
 
         this.deck = null;
@@ -68,38 +72,13 @@ class App {
     }
 
     handleRestartingChange = () => {
-        toggleControl($("#btnReset"), true);
-        toggleControl($("#btnShare"), true); // TODO ??
-
         this.playthrough.restart();
         this.handleGeneralChange();
     }
 
-    updateTitleDisplay = () => {
-        $("#title").text(app.deck.title);
-    }
-
-    updateSourceDisplay = () => {
-        let html = "";
-
-        if (app.deck.sourceName || app.deck.sourceURL) {
-            html += "Source: ";
-        }
-
-        if (! app.deck.sourceURL) {
-            html += app.deck.sourceName;
-        } else {
-            let sourceText = !!app.deck.sourceName ? app.deck.sourceName : "Link";
-            html += `<a href="${app.deck.sourceURL}" title="Source">${sourceText}</a>`;
-        }
-
-        html = `<div id="source">${html}</div>`;
-        $("#sourceContainer").html(html);
-    }
-
     handleGeneralChange = () => {
-        this.updateTitleDisplay();
-        this.updateSourceDisplay();
+        $("#title").text(app.deck.title);
+        updateSourceDisplay();
         updateCardDisplay();
 
         updateControls();
@@ -136,7 +115,6 @@ class Deck {
     }
 
     invert = () => {
-        console.log('inverted');
         this.dictionary = Tools.swapObjectKeys(this.dictionary);
         return this;
     }
@@ -190,10 +168,12 @@ class Playthrough {
     }
 
     updateCard = () => {
+        let deck = app.getActiveDeck();
+
         let i = this.order[this.index];
-        let keys = Object.keys(app.deck.dictionary);
+        let keys = Object.keys(deck.dictionary);
         this.prompt = keys[i];
-        this.answer = app.deck.dictionary[this.prompt];
+        this.answer = deck.dictionary[this.prompt];
     }
 
     clearCard = () => {
@@ -363,15 +343,15 @@ class Options {
         this.showPrompt.change(toggleTextPromptVisibility);
         this.showAnswer.change(toggleTextPromptVisibility);
 
-        $("#optionsPanel input").change(changeOption);
-        $("#optionsPanel select").change(changeOption);
-        this.voiceAnswersRate.change(changeOption);
-        this.voicePromptsRate.change(changeOption);
+        $("#optionsPanel input").change(updateControls);
+        $("#optionsPanel select").change(updateControls);
+        this.voiceAnswersRate.change(updateControls);
+        this.voicePromptsRate.change(updateControls);
 
         this.randomizeOrder.change(changeOptionAndRestart);
         this.invertDictionary.change(handleChangeInvertDictionary);
-        this.silentParentheses.change(changeOption);
-        this.silentAlternatives.change(changeOption);
+        this.silentParentheses.change(updateControls);
+        this.silentAlternatives.change(updateControls);
     }
 }
 
@@ -1223,9 +1203,11 @@ const toggleTextAnswerVisibility = () => {
 };
 
 const displaySamples = () => {
-    let keys = Object.keys(app.deck.dictionary);
+    let deck = app.getActiveDeck();
+
+    let keys = Object.keys(deck.dictionary);
     let sP = keys[0];
-    let sA = app.deck.dictionary[sP];
+    let sA = deck.dictionary[sP];
 
     $("#samplePrompt").text(`e.g. "${sP}"`);
     $("#sampleAnswer").text(`e.g. "${sA}"`);
@@ -1256,19 +1238,14 @@ const handleChangeInvertDictionary = () => {
     app.options.voiceAnswersRate.value(vRP);
 
     // basics
-    app.deck = app.deck.copy().invert();
     displaySamples();
-    changeOptionAndRestart();
-};
-
-const changeOption = () => {
-    let optionsHaveChanged = app.optionsHaveChanged();
-    toggleControl($('#btnSetDefaultOptions'), optionsHaveChanged);
-    toggleControl($('#btnReset'), optionsHaveChanged || app.deckHasChanged());
+    updateControls();
+    app.playthrough.updateCard();
+    updateCardDisplay();
 };
 
 const changeOptionAndRestart = () => {
-    changeOption();
+    updateControls();
     app.handleRestartingChange();
 };
 
@@ -1414,7 +1391,25 @@ const createDropzone = () => {
     );
 };
 
-/* Display updater */
+/* Display updaters */
+
+updateSourceDisplay = () => {
+    let html = "";
+
+    if (app.deck.sourceName || app.deck.sourceURL) {
+        html += "Source: ";
+    }
+
+    if (! app.deck.sourceURL) {
+        html += app.deck.sourceName;
+    } else {
+        let sourceText = !!app.deck.sourceName ? app.deck.sourceName : "Link";
+        html += `<a href="${app.deck.sourceURL}" title="Source">${sourceText}</a>`;
+    }
+
+    html = `<div id="source">${html}</div>`;
+    $("#sourceContainer").html(html);
+}
 
 updateCardDisplay = () => {
     $("#prompt").text(app.playthrough.prompt);
