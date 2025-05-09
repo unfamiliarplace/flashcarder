@@ -1,312 +1,370 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Flashcarder</title>
-  <link rel='stylesheet' href='https://csshake.surge.sh/csshake.min.css'>
-<link rel='stylesheet' href='https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'>
-<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'>
-<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.css'>
-  <link rel="stylesheet" href="./style.css">
+    <meta charset="UTF-8">
+    <title>Flashcarder</title>
+    <link rel='stylesheet' href='https://csshake.surge.sh/csshake.min.css'>
+    <link rel='stylesheet' href='https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.css'>
+    <link rel="stylesheet" href="./style.css">
 
-  <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
-  <link rel="manifest" href="favicon/site.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
 
 </head>
 <body>
 <!-- partial:index.partial.html -->
 <div id='app'>
-  <div id='dropzoneContainer'></div>
-  <div id='mainPanel'>
-    <div id='gamePanel' class='fullPanel'>
-      <div id='titlePanel'>
-        <h1 id='title'>French Test Deck</h1>
-      </div>
-      <div id='focusPanel'>
-        <div id='toBeginPanel' class='hider'>
-          <h2>[ NEXT to begin ]</h2>
+    <div id='dropzoneContainer'></div>
+    <div id='mainPanel'>
+        <div id='gamePanel' class='fullPanel'>
+            <div id='titlePanel'>
+                <h1 id='title'>French Test Deck</h1>
+            </div>
+            <div id='focusPanel'>
+                <div id='toBeginPanel' class='hider'>
+                    <h2>[ NEXT to begin ]</h2>
+                </div>
+                <div id="promptPanel" class='cardPanel'>
+                    <div id='prompt' class='card'></div>
+                    <div id='promptHider' class='hide hider'>?</div>
+                </div>
+                <div id="answerPanel" class='cardPanel'>
+                    <div id='answer' class='card'></div>
+                    <div id='answerHider' class='hide hider'>?</div>
+                </div>
+            </div>
+            <div id='controls'>
+                <button id='btnNext' class='control buttonBase buttonEffects' title='Show the next word. Hotkey N'>Next
+                    [N]
+                </button>
+                <button id='btnPrevious' class='control buttonBase buttonEffects'
+                        title='Show the previous word. Hotkey P'>Previous [P]
+                </button>
+                <button id='btnReveal' class='control buttonBase buttonEffects'
+                        title="Reveal this word's meaning. Hotkey R">Reveal [R]
+                </button>
+                <button id='btnRestart' class='control buttonBase buttonEffects'
+                        title="Restart the words shown. Hotkey X">Restart [X]
+                </button>
+            </div>
+            <div id='info'>
+                <div id='infoCount'>0</div>
+                /
+                <div id='infoDenom'>3</div>
+                word(s) seen so far.
+            </div>
         </div>
-        <div id="promptPanel" class='cardPanel'>
-          <div id='prompt' class='card'></div>
-          <div id='promptHider' class='hide hider'>?</div>
+        <div id="helpPanel" class="hide fullPanel verticalPanel overlayPanel">
+            <div id="helpContent" class="panelContent">
+                <h1>Help</h1>
+                <hr/>
+                <p><strong>Flashcarder</strong> is an app that allows you to upload custom "decks" of flashcards with
+                    words and definitions.</p>
+                <p>To upload a deck, click "Upload" or drag and drop a file.</p>
+                <p> You can download a few premade examples <a
+                        href="https://tools.unfamiliarplace.com/flashcarder/assets/premade/"
+                        title="A folder of JSON decks">here.</a></p>
+                <p>To make your own, the most surefire method is to use the editor, which allows you to modify the cards
+                    live. You can also choose to upload a json file. An example format can be found <a
+                            href="https://www.npoint.io/docs/0a3f36ec728ae5ba8c94"
+                            title="JSON format and schema example on Npoint">here.</a></p>
+                <p>You can also upload a text file (the extension doesn't matter). The file should consist of entries,
+                    with an optional set of special keys _title, _source, _sourceURL. An example format can be found <a
+                            href="https://tools.unfamiliarplace.com/flashcarder/assets/premade/spanish_example.txt"
+                            title="">here</a>. The editor's "raw items" box works the same as an uploaded text file.</p>
+                <p><em>Note that the main delimiter can be a tab, semicolon, colon, or pipe. Repetitions of the main
+                    delimiter will be ignored. Currently, a comma is not supported due to a design oversight whereby the
+                    comma was used for multiple answers for a given entry. However, you can override this by including
+                    an optional line at the top of the file: <code>SEP=X</code> where <code>X</code> is the delimiter
+                    you want, following the Excel standard for CSV files.</em></p>
+                <p>You can also share your deck by copying a unique URL that encodes all the information. Since URLs
+                    have limited length, large decks (a few hundred words or more) may not work. Alternatively, you can
+                    share a file generated by the program and have them upload that. These files can be of any size.</p>
+            </div>
         </div>
-        <div id="answerPanel" class='cardPanel'>
-          <div id='answer' class='card'></div>
-          <div id='answerHider' class='hide hider'>?</div>
+        <div id="optionsPanel" class="hide fullPanel verticalPanel overlayPanel">
+
+            <div id="optionsContent" class="panelContent">
+                <h1>Options</h1>
+                <div class='optionsRow'>
+                    <div class='optionsCol fullWidth'>
+                        <button id='btnSetDefaultOptions' title='Reset options to defaults. Hotkey D'
+                                class='control buttonBase buttonEffects'>Defaults [D]
+                        </button>
+                    </div>
+
+                </div>
+                <div class='optionsRow'>
+                    <div class='optionsCol' id='optionsColPrompts'>
+
+                        <h2>Prompts</h2>
+                        <div class='sample' id='samplePrompt'>[sample prompt]</div>
+
+                        <fieldset id='fieldsetShowPrompt' class='fieldsetRadio flexCol'>
+                            <legend>Show prompt</legend>
+                            <div class='fieldsetRadioSub'>
+
+                                <input type="radio" name="optShowPrompt" id="showPromptNext"><label
+                                    for="showPromptNext">Show prompt on "Next"</label>
+                            </div>
+                            <div class='fieldsetRadioSub'>
+
+                                <input type="radio" name="optShowPrompt" id="showPromptReveal"><label
+                                    for="showPromptReveal">Show prompt on "Reveal"</label>
+                            </div>
+                            <div class='fieldsetRadioSub'>
+
+                                <input type="radio" name="optShowPrompt" id="showPromptNever"><label
+                                    for="showPromptNever">Never show prompt</label>
+                            </div>
+                        </fieldset>
+
+                        <label for='optSayPrompt'>
+                            <input type='checkbox' id='optSayPrompt'/>
+                            <span class='checkmark'></span>
+                            Read aloud on 'Next'</label>
+                        <!--            <div class='optLabelPlusOption'>-->
+                        <!--              <label for="optLanguagePrompts">-->
+                        <!--                <div class="optSideLabel">Voice language</div>-->
+                        <!--              </label>-->
+                        <!--              <select id="optLanguagePrompts"></select>-->
+                        <!--            </div>-->
+
+                        <div class='optLabelPlusOption'>
+                            <label for="optVoicePrompts">
+                                <div class="optSideLabel">Voice</div>
+                            </label>
+                            <select id="optVoicePrompts"></select>
+                        </div>
+
+                        <div class='optLabelPlusOption'>
+                            <label for='optVoicePromptsRate' class='sliderLabel ui-widget'>Rate</label>
+                            <div class="sliderContainer">
+                                <div id='optVoicePromptsRate' class='slider sliderNumber'></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='optionsCol' id='optionsColAnswers'>
+                        <h2>Answers</h2>
+                        <div class='sample' id='sampleAnswer'>[sample answer]</div>
+
+                        <fieldset id='fieldsetShowAnswer' class='fieldsetRadio flexCol'>
+                            <legend>Show answer</legend>
+                            <div class='fieldsetRadioSub'>
+
+                                <input type="radio" name="optShowAnswer" id="showAnswerNext"><label
+                                    for="showAnswerNext">Show answer on "Next"</label>
+                            </div>
+                            <div class='fieldsetRadioSub'>
+
+                                <input type="radio" name="optShowAnswer" id="showAnswerReveal"><label
+                                    for="showAnswerReveal">Show answer on "Reveal"</label>
+                            </div>
+                            <div class='fieldsetRadioSub'>
+
+                                <input type="radio" name="optShowAnswer" id="showAnswerNever"><label
+                                    for="showAnswerNever">Never show answer</label>
+                            </div>
+                        </fieldset>
+
+                        <label for='optSayAnswer'>
+                            <input type='checkbox' id='optSayAnswer'/>
+                            <span class='checkmark'></span>
+                            Read aloud on 'Reveal'</label>
+
+                        <!--            <div class='optLabelPlusOption'>-->
+                        <!--              <label for="optLanguageAnswers">-->
+                        <!--                <div class="optSideLabel">Voice language</div>-->
+                        <!--              </label>-->
+                        <!--              <select id="optLanguageAnswers"></select>-->
+                        <!--            </div>-->
+
+                        <div class='optLabelPlusOption'>
+                            <label for="optVoiceAnswers">
+                                <div class="optSideLabel">Voice</div>
+                            </label>
+                            <select id="optVoiceAnswers"></select>
+                        </div>
+
+                        <div class='optLabelPlusOption'>
+                            <label for='optVoiceAnswersRate' class='sliderLabel ui-widget'>Rate</label>
+                            <div class="sliderContainer">
+                                <div id='optVoiceAnswersRate' class='slider sliderNumber'></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='optionsCol fullWidth' id='optionsColGeneral'>
+                        <h2>General</h2>
+                        <div class='sample'></div>&nbsp;
+                        <div class='optLabelPlusOption'>
+                            <label for='optVolume' id='labelVolume' class='sliderLabel ui-widget'>Volume</label>
+                            <div class="sliderContainer">
+                                <div id='optVolume' class='slider sliderNumber'></div>
+                            </div>
+                        </div>
+                        <label for='optRandomizeOrder' title='Show the prompts in random order'>
+                            <input type='checkbox' id='optRandomizeOrder' checked='checked'/>
+                            <span class='checkmark'></span>
+                            Randomize order</label>
+                        <label for='optInvertDictionary'
+                               title='Swap prompts and answers. Duplicate answers will be harmonized to one. Voices are automatically swapped for you.'>
+                            <input type='checkbox' id='optInvertDictionary'/>
+                            <span class='checkmark'></span>
+                            Swap prompts & answers</label>
+                        <label for='optSilentParentheses' title='Omit reading items in brackets aloud.'>
+                            <input type='checkbox' id='optSilentParentheses'/>
+                            <span class='checkmark'></span>
+                            Silent parentheses</label>
+                        <label for='optSilentAlternatives'
+                               title='Only read one side of a slash / skip the second side.'>
+                            <input type='checkbox' id='optSilentAlternatives'/>
+                            <span class='checkmark'></span>
+                            Silent alternatives</label>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div id='controls'>
-        <button id='btnNext' class='control buttonBase buttonEffects' title='Show the next word. Hotkey N'>Next [N]</button>
-        <button id='btnPrevious' class='control buttonBase buttonEffects' title='Show the previous word. Hotkey P'>Previous [P]</button>
-        <button id='btnReveal' class='control buttonBase buttonEffects' title="Reveal this word's meaning. Hotkey R">Reveal [R]</button>
-        <button id='btnRestart' class='control buttonBase buttonEffects' title="Restart the words shown. Hotkey X">Restart [X]</button>
-      </div>
-      <div id='info'>
-        <div id='infoCount'>0</div> / <div id='infoDenom'>3</div> word(s) seen so far.
-      </div>
+        <div id="editPanel" class="hide fullPanel horizontalPanel overlayPanel">
+            <div id='editOverall' class='panelContent'>
+                <h1>Share & Edit</h1>
+                <hr/>
+                <div id="shareWrap" class="subpanelContent flexCol">
+                    <div id='shareContent' class='flexRowCenter'>
+                        <div id='shareURLLabel'>URL</div>
+                        <input id="shareURL" type="text" readonly value=""/>
+                        <button id="btnCopyShareURL" class="buttonBase buttonEffects"
+                                title="Copy the share URL to the clipboard">Copy URL
+                        </button>
+                        <button id="btnDownloadJSON" class="buttonBase buttonEffects buttonDownload"
+                                title="Download the current deck as a .json file">Download .json
+                        </button>
+                        <button id="btnDownloadCSV" class="buttonBase buttonEffects buttonDownload"
+                                title="Download the current deck as a .csv file">Download .csv
+                        </button>
+                        <button id="btnDownloadTXT" class="buttonBase buttonEffects buttonDownload"
+                                title="Download the current deck as a .txt file">Download .txt
+                        </button>
+                    </div>
+                </div>
+                <hr/>
+                <div id="editContent" class='subpanelContent'>
+                    <div id='editUniversalControlPanel'>
+                        <div class='editSectionButtons flexRow'>
+                            <button id='btnEditClearAll' class='buttonBase buttonEffects editClearButton'
+                                    title='Clear all sections'><i class="fa fa-trash" aria-hidden="true"></i>Clear all
+                            </button>
+                            <button id='btnEditClearMeta' class='buttonBase buttonEffects editClearButton'
+                                    title='Clear meta section'><i class="fa fa-trash" aria-hidden="true"></i>Clear meta
+                            </button>
+                            <button id='btnEditClearItems' class='buttonBase buttonEffects editClearButton'
+                                    title='Clear item sections'><i class="fa fa-trash" aria-hidden="true"></i>Clear
+                                items
+                            </button>
+                            <button id='btnEditSetDefaults' class='buttonBase buttonEffects'
+                                    title='Restore default values'><i class="fa fa-clipboard-list"
+                                                                      aria-hidden="true"></i>Defaults
+                            </button>
+                        </div>
+                    </div>
+                    <div class='flexRow' id='editSubPanel'>
+                        <div id='editMetaPanel' class='flexCol'>
+                            <h2>Meta</h2>
+                            <div class='editMetaItem'>
+                                <label for='editTitle'>
+                                    <div class='editMetaItemLabel'>Title</div>
+                                    <input id='editTitle' class='editText'>
+                                </label>
+                            </div>
+                            <div class='editMetaItem'>
+                                <label for='editSourceName'>
+                                    <div class='editMetaItemLabel'>Source</div>
+                                    <input id='editSourceName' class='editText'>
+                                </label>
+                            </div>
+                            <div class='editMetaItem'>
+                                <label for='editSourceURL'>
+                                    <div class='editMetaItemLabel'>URL</div>
+                                    <input id='editSourceURL' class='editText'>
+                                </label>
+                            </div>
+                            <div class='editMetaItem'>
+                                <label for='editLanguagePrompts'>
+                                    <div class='editMetaItemLabel'>Prompt language</div>
+                                    <select id='editLanguagePrompts'></select>
+                                </label>
+                            </div>
+                            <div class='editMetaItem'>
+                                <label for='editLanguageAnswers'>
+                                    <div class='editMetaItemLabel'>Answer language</div>
+                                    <select id='editLanguageAnswers'></select>
+                                </label>
+                            </div>
+                        </div>
+                        <div id='editItemsPanel'>
+                            <h2 id='editItemsHeading'>Items</h2>
+                            <div id='editItemsList' class='flexCol hideScrollbar'></div>
+                        </div>
+                        <div id='editRawPanel'>
+                            <h2>Raw Items</h2>
+                            <textarea id='editRaw'></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="helpPanel" class="hide fullPanel verticalPanel overlayPanel">
-      <div id="helpContent" class="panelContent">
-        <h1>Help</h1>
-        <hr />
-        <p><strong>Flashcarder</strong> is an app that allows you to upload custom "decks" of flashcards with words and definitions.</p>
-        <p>To upload a deck, click "Upload" or drag and drop a file.</p>
-        <p> You can download a few premade examples <a href="https://tools.unfamiliarplace.com/flashcarder/assets/premade/" title="A folder of JSON decks">here.</a></p>
-        <p>To make your own, the most surefire method is to use the editor, which allows you to modify the cards live. You can also choose to upload a json file. An example format can be found <a href="https://www.npoint.io/docs/0a3f36ec728ae5ba8c94" title="JSON format and schema example on Npoint">here.</a></p>
-        <p>You can also upload a text file (the extension doesn't matter). The file should consist of entries, with an optional set of special keys _title, _source, _sourceURL. An example format can be found <a href="https://tools.unfamiliarplace.com/flashcarder/assets/premade/spanish_example.txt" title="">here</a>. The editor's "raw items" box works the same as an uploaded text file.</p>
-        <p><em>Note that the main delimiter can be a tab, semicolon, colon, or pipe. Repetitions of the main delimiter will be ignored. Currently, a comma is not supported due to a design oversight whereby the comma was used for multiple answers for a given entry. However, you can override this by including an optional line at the top of the file: <code>SEP=X</code> where <code>X</code> is the delimiter you want, following the Excel standard for CSV files.</em></p>
-        <p>You can also share your deck by copying a unique URL that encodes all the information. Since URLs have limited length, large decks (a few hundred words or more) may not work. Alternatively, you can share a file generated by the program and have them upload that. These files can be of any size.</p>
-      </div>
+    <div id='footer'>
+        <div id='footerContent'>
+            <div class='footerBlock' id='footerLeft'>
+                <div id='resetButtonContainer'>
+                    <button id='btnReset' class='buttonBase buttonEffects buttonFooter' title='Restore default deck and options'>
+                        Reset [Z]
+                    </button>
+                </div>
+                <div id='uploadButtonContainer'>
+                    <button id="btnUpload" class="buttonBase buttonEffects buttonFooter" title="Upload a deck file">Upload [U]</button>
+                </div>
+                <div id='editButtonContainer'>
+                    <button id='btnEdit' class='buttonBase buttonEffects buttonFooter' title='Edit this deck'>Share &
+                        Edit [E]
+                    </button>
+                </div>
+                <div id="sourceContainer"></div>
+            </div>
+            <div class='footerBlock' id='footerRight'>
+                <div id='optionsButtonContainer'>
+                    <button id='btnOptions' class='buttonBase buttonEffects buttonFooter'
+                            title='Show/hide options panel. Hotkey O'>Options [O]
+                    </button>
+                </div>
+                <div id='helpButtonContainer'>
+                    <button id='btnHelp' class='buttonBase buttonEffects buttonFooter'
+                            title='Show/hide help panel. Hotkey H'>Help [H]
+                    </button>
+                </div>
+                <div id="copyrightContainer">
+                    <div id="copyright">© <span id="copyrightYear">2025</span> <a href="https://sawczak.com">Luke
+                        Sawczak</a></div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="optionsPanel" class="hide fullPanel verticalPanel overlayPanel">
-
-      <div id="optionsContent" class="panelContent">
-        <h1>Options</h1>
-        <div class='optionsRow'>
-          <div class='optionsCol fullWidth'>
-            <button id='btnSetDefaultOptions' title='Reset options to defaults. Hotkey D' class='control buttonBase buttonEffects'>Defaults [D]</button>
-          </div>
-
-        </div>
-        <div class='optionsRow'>
-          <div class='optionsCol' id='optionsColPrompts'>
-
-            <h2>Prompts</h2>
-            <div class='sample' id='samplePrompt'>[sample prompt]</div>
-
-            <fieldset id='fieldsetShowPrompt' class='fieldsetRadio flexCol'>
-              <legend>Show prompt</legend>
-              <div class='fieldsetRadioSub'>
-
-                <input type="radio" name="optShowPrompt" id="showPromptNext"><label for="showPromptNext">Show prompt on "Next"</label>
-              </div>
-              <div class='fieldsetRadioSub'>
-
-                <input type="radio" name="optShowPrompt" id="showPromptReveal"><label for="showPromptReveal">Show prompt on "Reveal"</label>
-              </div>
-              <div class='fieldsetRadioSub'>
-
-                <input type="radio" name="optShowPrompt" id="showPromptNever"><label for="showPromptNever">Never show prompt</label>
-              </div>
-            </fieldset>
-
-            <label for='optSayPrompt'>
-              <input type='checkbox' id='optSayPrompt' />
-              <span class='checkmark'></span>
-              Read aloud on 'Next'</label>
-<!--            <div class='optLabelPlusOption'>-->
-<!--              <label for="optLanguagePrompts">-->
-<!--                <div class="optSideLabel">Voice language</div>-->
-<!--              </label>-->
-<!--              <select id="optLanguagePrompts"></select>-->
-<!--            </div>-->
-
-            <div class='optLabelPlusOption'>
-              <label for="optVoicePrompts">
-                <div class="optSideLabel">Voice</div>
-              </label>
-              <select id="optVoicePrompts"></select>
-            </div>
-
-            <div class='optLabelPlusOption'>
-              <label for='optVoicePromptsRate' class='sliderLabel ui-widget'>Rate</label>
-              <div class="sliderContainer">
-                <div id='optVoicePromptsRate' class='slider sliderNumber'></div>
-              </div>
-            </div>
-          </div>
-          <div class='optionsCol' id='optionsColAnswers'>
-            <h2>Answers</h2>
-            <div class='sample' id='sampleAnswer'>[sample answer]</div>
-
-            <fieldset id='fieldsetShowAnswer' class='fieldsetRadio flexCol'>
-              <legend>Show answer</legend>
-              <div class='fieldsetRadioSub'>
-
-                <input type="radio" name="optShowAnswer" id="showAnswerNext"><label for="showAnswerNext">Show answer on "Next"</label>
-              </div>
-              <div class='fieldsetRadioSub'>
-
-                <input type="radio" name="optShowAnswer" id="showAnswerReveal"><label for="showAnswerReveal">Show answer on "Reveal"</label>
-              </div>
-              <div class='fieldsetRadioSub'>
-
-                <input type="radio" name="optShowAnswer" id="showAnswerNever"><label for="showAnswerNever">Never show answer</label>
-              </div>
-            </fieldset>
-
-            <label for='optSayAnswer'>
-              <input type='checkbox' id='optSayAnswer' />
-              <span class='checkmark'></span>
-              Read aloud on 'Reveal'</label>
-
-<!--            <div class='optLabelPlusOption'>-->
-<!--              <label for="optLanguageAnswers">-->
-<!--                <div class="optSideLabel">Voice language</div>-->
-<!--              </label>-->
-<!--              <select id="optLanguageAnswers"></select>-->
-<!--            </div>-->
-
-            <div class='optLabelPlusOption'>
-              <label for="optVoiceAnswers">
-                <div class="optSideLabel">Voice</div>
-              </label>
-              <select id="optVoiceAnswers"></select>
-            </div>
-
-            <div class='optLabelPlusOption'>
-              <label for='optVoiceAnswersRate' class='sliderLabel ui-widget'>Rate</label>
-              <div class="sliderContainer">
-                <div id='optVoiceAnswersRate' class='slider sliderNumber'></div>
-              </div>
-            </div>
-          </div>
-          <div class='optionsCol fullWidth' id='optionsColGeneral'>
-            <h2>General</h2>
-            <div class='sample'></div>&nbsp;
-            <div class='optLabelPlusOption'>
-              <label for='optVolume' id='labelVolume' class='sliderLabel ui-widget'>Volume</label>
-              <div class="sliderContainer">
-                <div id='optVolume' class='slider sliderNumber'></div>
-              </div>
-            </div>
-            <label for='optRandomizeOrder' title='Show the prompts in random order'>
-              <input type='checkbox' id='optRandomizeOrder' checked='checked' />
-              <span class='checkmark'></span>
-              Randomize order</label>
-            <label for='optInvertDictionary' title='Swap prompts and answers. Duplicate answers will be harmonized to one. Voices are automatically swapped for you.'>
-              <input type='checkbox' id='optInvertDictionary' />
-              <span class='checkmark'></span>
-              Swap prompts & answers</label>
-            <label for='optSilentParentheses' title='Omit reading items in brackets aloud.'>
-              <input type='checkbox' id='optSilentParentheses' />
-              <span class='checkmark'></span>
-              Silent parentheses</label>
-            <label for='optSilentAlternatives' title='Only read one side of a slash / skip the second side.'>
-              <input type='checkbox' id='optSilentAlternatives' />
-              <span class='checkmark'></span>
-              Silent alternatives</label>
-          </div>
-
-        </div>
-      </div>
-    </div>
-    <div id="editPanel" class="hide fullPanel horizontalPanel overlayPanel">
-      <div id='editOverall' class='panelContent'>
-        <h1>Share & Edit</h1>
-        <hr />
-
-        <div id="shareWrap" class="subpanelContent flexCol">
-          <div id='shareContent' class='flexRowCenter'>
-
-            <div id='shareURLLabel'>URL</div> <input id="shareURL" type="text" readonly value="" />
-                <button id="btnCopyShareURL" class="buttonBase buttonEffects" title="Copy the share URL to the clipboard">Copy URL</button>
-                <button id="btnDownloadJSON" class="buttonBase buttonEffects buttonDownload" title="Download the current deck as a .json file">Download .json</button>
-                <button id="btnDownloadCSV" class="buttonBase buttonEffects buttonDownload" title="Download the current deck as a .csv file">Download .csv</button>
-                <button id="btnDownloadTXT" class="buttonBase buttonEffects buttonDownload" title="Download the current deck as a .txt file">Download .txt</button>
-
-          </div>
-        </div>
-        <hr />
-        <div id="editContent" class='subpanelContent'>
-          <div id='editUniversalControlPanel'>
-            <div class='editSectionButtons flexRow'><button id='btnEditClearAll' class='buttonBase buttonEffects editClearButton' title='Clear all sections'><i class="fa fa-trash" aria-hidden="true"></i>Clear all</button>
-              <button id='btnEditClearMeta' class='buttonBase buttonEffects editClearButton' title='Clear meta section'><i class="fa fa-trash" aria-hidden="true"></i>Clear meta</button>
-              <button id='btnEditClearItems' class='buttonBase buttonEffects editClearButton' title='Clear item sections'><i class="fa fa-trash" aria-hidden="true"></i>Clear items</button>
-              <button id='btnEditSetDefaults' class='buttonBase buttonEffects' title='Restore default values'><i class="fa fa-clipboard-list" aria-hidden="true"></i>Defaults</button>
-            </div>
-          </div>
-          <div class='flexRow' id='editSubPanel'>
-            <div id='editMetaPanel' class='flexCol'>
-
-              <h2>Meta</h2>
-
-              <div class='editMetaItem'>
-                <label for='editTitle'>
-                  <div class='editMetaItemLabel'>Title</div>
-                  <input id='editTitle' class='editText'>
-                </label>
-              </div>
-
-              <div class='editMetaItem'>
-                <label for='editSourceName'>
-                  <div class='editMetaItemLabel'>Source</div>
-                  <input id='editSourceName' class='editText'>
-                </label>
-              </div>
-
-              <div class='editMetaItem'>
-                <label for='editSourceURL'>
-                  <div class='editMetaItemLabel'>URL</div>
-                  <input id='editSourceURL' class='editText'>
-                </label>
-              </div>
-
-              <div class='editMetaItem'>
-                <label for='editLanguagePrompts'>
-                  <div class='editMetaItemLabel'>Prompt language</div>
-                  <select id='editLanguagePrompts'></select>
-                </label>
-              </div>
-
-              <div class='editMetaItem'>
-                <label for='editLanguageAnswers'>
-                  <div class='editMetaItemLabel'>Answer language</div>
-                  <select id='editLanguageAnswers'></select>
-                </label>
-              </div>
-            </div>
-            <div id='editItemsPanel'>
-              <h2 id='editItemsHeading'>Items</h2>
-
-              <div id='editItemsList' class='flexCol hideScrollbar'></div>
-            </div>
-            <div id='editRawPanel'>
-              <h2>Raw Items</h2>
-
-              <textarea id='editRaw'></textarea>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-  <div id='footer'>
-    <div id='footerContent'>
-      <div class='footerBlock' id='footerLeft'>
-        <div id='resetButtonContainer'><button id='btnReset' class='buttonBase buttonEffects buttonFooter' title='Remove uploaded data'>Reset [Z]</button></div>
-        <div id='uploadButtonContainer'><button id="btnUpload" class="buttonBase buttonEffects buttonFooter">Upload [U]</button></div>
-        <div id='editButtonContainer'><button id='btnEdit' class='buttonBase buttonEffects buttonFooter' title='Edit this deck'>Share & Edit [E]</button></div>
-        <div id="sourceContainer"></div>
-      </div>
-      <div class='footerBlock' id='footerRight'>
-        <div id='optionsButtonContainer'>
-          <button id='btnOptions' class='buttonBase buttonEffects buttonFooter' title='Show/hide options panel. Hotkey O'>Options [O]</button>
-        </div>
-        <div id='helpButtonContainer'>
-          <button id='btnHelp' class='buttonBase buttonEffects buttonFooter' title='Show/hide help panel. Hotkey H'>Help [H]</button>
-        </div>
-        <div id="copyrightContainer">
-          <div id="copyright">© <span id="copyrightYear">2025</span> <a href="https://sawczak.com">Luke Sawczak</a></div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 <!-- partial -->
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
 <script src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js'></script>
+<script src='https://g.sawczak.com/js-tools/lib/jquery-ui-options.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js'></script>
+<script src='https://t.sawczak.com/common/includes/lz-string/lz-string.min.js'></script>
 <script src='https://g.sawczak.com/js-tools/lib/app-tools.js'></script>
 <script src='https://g.sawczak.com/js-tools/lib/upload-io.js'></script>
 <script src="https://g.sawczak.com/js-tools/lib/link-io.js"></script>
-<script src='https://g.sawczak.com/js-tools/lib/jquery-ui-options.js'></script>
-<script src='https://t.sawczak.com/common/includes/lz-string/lz-string.min.js'></script>
 <script src='https://g.sawczak.com/js-tools/lib/languages.js'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js'></script>
-<script  src="./script.js"></script>
+<script src="./script.js"></script>
 
 </body>
 </html>

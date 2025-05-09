@@ -824,7 +824,6 @@ class Editor {
     }
 
     static editMetaField = () => {
-
         app.deck.title = $('#editTitle').val().trim();
         app.deck.sourceName = $('#editSourceName').val().trim();
         app.deck.sourceURL = addSourceURLProtocol($('#editSourceURL').val().trim());
@@ -863,7 +862,7 @@ class Editor {
         let raw = $('#editRaw').val().trim();
         let parsed = Parser.parseTXT(raw);
 
-        app.deck.dictionary = parsed['dictionary'];
+        app.deck.dictionary = parsed.dictionary;
         app.handleDeckChange({'skipRaw': true});
     }
 
