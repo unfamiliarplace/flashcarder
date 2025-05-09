@@ -381,6 +381,7 @@ class Parser {
 
     static _parseCSVLike = (content, delim) => {
         let data = {};
+        data.dictionary = {};
 
         let pieces = [];
         let firstPiece = "";
@@ -406,7 +407,7 @@ class Parser {
             firstPieceLower = firstPiece.toLowerCase();
             if (["_title", "_t"].includes(firstPieceLower)) {
                 data.title = lastPiece;
-            } else if (["_source", "_src"].includes(firstPieceLower)) {
+            } else if (["_source", "_sourcename", "_src"].includes(firstPieceLower)) {
                 data.sourceName = lastPiece;
             } else if (["_sourceurl", "_url"].includes(firstPieceLower)) {
                 data.sourceURL = lastPiece;
@@ -693,7 +694,7 @@ class Receiver {
         }
 
         if (!! data.sourceURL) {
-            data.sourceURL = addSourceURLProtocol(sourceURL);
+            data.sourceURL = addSourceURLProtocol(data.sourceURL);
         }
 
         if (! data.sourceName) {
@@ -1426,6 +1427,33 @@ const createDropzone = () => {
 
 /* Binders */
 
+// Bind helpers
+// Needed because app.playthrough's definition changes over time so it needs to be decoupled
+
+const next = () => {
+    if (app.playthrough.canNext()) {
+        app.playthrough.next();
+    }
+}
+
+const previous = () => {
+    if (app.playthrough.canPrevious()) {
+        app.playthrough.previous();
+    }
+}
+
+const reveal = () => {
+    if (app.playthrough.canReveal()) {
+        app.playthrough.reveal();
+    }
+}
+
+const restart = () => {
+    if (app.playthrough.canRestart()) {
+        app.playthrough.restart();
+    }
+}
+
 const handleKeyup = (e) => {
 
     // If we are escaping from a text entry field, don't hide the window... apparently
@@ -1436,19 +1464,19 @@ const handleKeyup = (e) => {
 
     switch (e.code) {
         case "KeyN":
-            $("#btnNext").click();
+            next();
             break;
 
         case "KeyP":
-            $("#btnPrevious").click();
+            previous();
             break;
 
         case "KeyR":
-            $("#btnReveal").click();
+            reveal();
             break;
 
         case "KeyX":
-            $("#btnRestart").click();
+            restart();
             break;
 
         case "KeyU":
@@ -1490,11 +1518,12 @@ const handleKeyup = (e) => {
     }
 };
 
+
 const bindGameControls = () => {
-    $("#btnNext").click(app.playthrough.next);
-    $("#btnPrevious").click(app.playthrough.previous);
-    $("#btnReveal").click(app.playthrough.reveal);
-    $("#btnRestart").click(app.playthrough.restart);
+    $("#btnNext").click(next);
+    $("#btnPrevious").click(previous);
+    $("#btnReveal").click(reveal);
+    $("#btnRestart").click(restart);
     $("#btnReset").click(app.reset);
 }
 
