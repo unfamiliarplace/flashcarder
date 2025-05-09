@@ -20,7 +20,22 @@ class App {
     }
 
     deckHasChanged = () => {
-        return (!! this.deck) && (! this.deck.equals(defaultDeck));
+        return (!!this.deck) && (!this.deck.equals(defaultDeck));
+    }
+
+    deckHasMeta = () => {
+        return (!!this.deck) &&
+            [
+                this.deck.title.length > 0,
+                this.deck.sourceName.length > 0,
+                this.deck.sourceURL.length > 0,
+                !['', '--'].includes(this.deck.languagePrompts),
+                !['', '--'].includes(this.deck.languageAnswers),
+            ].some(Boolean);
+    }
+
+    deckHasContent = () => {
+        return (!!this.deck) && (Object.keys(this.deck.dictionary).length > 0);
     }
 
     reset = () => {
@@ -35,7 +50,9 @@ class App {
     }
 
     handleDeckChange = (editorArgs) => {
-        if (! editorArgs) { editorArgs = {}; } // JIC
+        if (!editorArgs) {
+            editorArgs = {};
+        } // JIC
 
         this.playthrough = new Playthrough();
 
@@ -327,24 +344,24 @@ class Options {
         this.silentAlternatives.change(View.updateControls);
     }
 
-    areDefault = () => {
+    haveChanged = () => {
         return [
-            options.volume.value() === optDefaultVolume,
-            options.voicePromptsRate.value() === optDefaultVoicePromptsRate,
-            options.voiceAnswersRate.value() === optDefaultVoiceAnswersRate,
+            options.volume.value() !== optDefaultVolume,
+            options.voicePromptsRate.value() !== optDefaultVoicePromptsRate,
+            options.voiceAnswersRate.value() !== optDefaultVoiceAnswersRate,
 
-            options.showPrompt.value() === optDefaultShowPrompt,
-            options.showAnswer.value() === optDefaultShowAnswer,
-            options.sayPrompt.value() === optDefaultSayPrompt,
-            options.sayAnswer.value() === optDefaultSayAnswer,
+            options.showPrompt.value() !== optDefaultShowPrompt,
+            options.showAnswer.value() !== optDefaultShowAnswer,
+            options.sayPrompt.value() !== optDefaultSayPrompt,
+            options.sayAnswer.value() !== optDefaultSayAnswer,
 
-            options.randomizeOrder.value() === optDefaultRandomizeOrder,
-            options.invertDictionary.value() === optDefaultInvertDictionary,
-            options.silentParentheses.value() === optDefaultSilentParentheses,
-            options.silentAlternatives.value() === optDefaultSilentAlternatives
+            options.randomizeOrder.value() !== optDefaultRandomizeOrder,
+            options.invertDictionary.value() !== optDefaultInvertDictionary,
+            options.silentParentheses.value() !== optDefaultSilentParentheses,
+            options.silentAlternatives.value() !== optDefaultSilentAlternatives
 
             // TODO missing the voice selection?
-        ].every(Boolean);
+        ].some(Boolean);
     }
 }
 
@@ -627,9 +644,9 @@ class Downloader {
 
         // core element
 
-        if (!! data.title) {
+        if (!!data.title) {
             filename = data.title;
-        } else if (!! data.source) {
+        } else if (!!data.source) {
             filename = data.source;
         }
 
@@ -689,23 +706,23 @@ class Receiver {
 
     static ameliorateData = (data) => {
 
-        if (! data.title) {
+        if (!data.title) {
             data.title = 'Untitled Deck';
         }
 
-        if (!! data.sourceURL) {
+        if (!!data.sourceURL) {
             data.sourceURL = addSourceURLProtocol(data.sourceURL);
         }
 
-        if (! data.sourceName) {
+        if (!data.sourceName) {
             data.sourceName = "";
         }
 
-        if (! data.languagePrompts) {
+        if (!data.languagePrompts) {
             data.languagePrompts = "--";
         }
 
-        if (! data.languageAnswers) {
+        if (!data.languageAnswers) {
             data.languageAnswers = "--";
         }
     }
@@ -714,7 +731,7 @@ class Receiver {
         Receiver.ameliorateData(data);
 
         // Back out if no functional dictionary (cannot be ameliorated...)
-        if (! data.dictionary || (Object.keys(data.dictionary).length === 0)) {
+        if (!data.dictionary || (Object.keys(data.dictionary).length === 0)) {
             return;
         }
 
@@ -814,11 +831,11 @@ class Editor {
         Editor.populateMeta();
 
         // These checks prevent editing items or raw from immediately parsing half-formed data as an error
-        if (! args.skipItems) {
+        if (!args.skipItems) {
             Editor.populateItems();
         }
 
-        if (! args.skipRaw) {
+        if (!args.skipRaw) {
             Editor.populateRaw();
         }
     }
@@ -883,10 +900,11 @@ class Editor {
     }
 
     static clearItems = () => {
-        $('.editItemContent').each(function() {
+        $('.editItemContent').each(function () {
             this.remove();
         });
-        Editor.editItemField();}
+        Editor.editItemField();
+    }
 
     static clearRaw = () => {
         $('#editRaw').val("");
@@ -920,6 +938,8 @@ class Editor {
         $('.btnEditDeleteItem').click(e => {
             Editor.deleteItem(e);
         });
+
+        View.updateControls();
     }
 
     static deleteItem = (e) => {
@@ -943,7 +963,7 @@ class View {
     };
 
     static updateControls = () => {
-        if (!! app.playthrough) {
+        if (!!app.playthrough) {
             View.toggleControl($("#btnNext"), app.playthrough.canNext());
             View.toggleControl($("#btnPrevious"), app.playthrough.canPrevious());
             View.toggleControl($("#btnReveal"), app.playthrough.canReveal());
@@ -957,15 +977,22 @@ class View {
 
         // minor optimization
         let deckHasChanged = app.deckHasChanged();
-        let optionsHaveChanged = ! options.areDefault();
-        let editContentExists = !! $('#editRaw').val().trim();
+        let optionsHaveChanged = options.haveChanged();
+
+        let editRawExists = !!$('#editRaw').val().trim();
+        let editItemsExist = $('.editItemContent').length > 0;
+
+        let editMetaExists = app.deckHasMeta();
+        let editContentExists = app.deckHasContent();
 
         View.toggleControl($('#btnReset'), deckHasChanged || optionsHaveChanged);
         View.toggleControl($('#btnEditSetDefaults'), deckHasChanged);
 
         View.toggleControl($('#btnShare'), editContentExists); // TODO also needs to check validity of url (length)
         View.toggleControl($('.buttonDownload'), editContentExists);
-        View.toggleControl($('.editClearButton'), editContentExists);
+        View.toggleControl($('#btnEditClearItems'), editRawExists || editItemsExist);
+        View.toggleControl($('#btnEditClearMeta'), editMetaExists || editRawExists || editItemsExist);
+        View.toggleControl($('#btnEditClearAll'), editContentExists || editMetaExists);
 
         View.toggleControl($('#btnSetDefaultOptions'), optionsHaveChanged);
     }
@@ -1027,7 +1054,7 @@ class View {
             html += "Source: ";
         }
 
-        if (! app.deck.sourceURL) {
+        if (!app.deck.sourceURL) {
             html += app.deck.sourceName;
         } else {
             let sourceText = !!app.deck.sourceName ? app.deck.sourceName : "Link";
@@ -1054,7 +1081,6 @@ class View {
         $('#copyrightYear').text(new Date().getFullYear());
     }
 }
-
 
 
 const populateShareURL = () => {
@@ -1116,11 +1142,11 @@ const compileSaveData = () => {
         data["sourceURL"] = app.deck.sourceURL;
     }
 
-    if (! ["", "--"].includes(app.deck.languagePrompts)) {
+    if (!["", "--"].includes(app.deck.languagePrompts)) {
         data["languagePrompts"] = $("#optLanguagePrompts").val();
     }
 
-    if (! ["", "--"].includes(app.deck.languageAnswers)) {
+    if (!["", "--"].includes(app.deck.languageAnswers)) {
         data["languagePrompts"] = $("#optLanguagePrompts").val();
     }
 
@@ -1133,7 +1159,7 @@ const packLinkData = () => {
     let data = compileSaveData();
 
     // compress the dict (the only component that seems to benefit)
-    data.dictionary = LinkIO.compress(JSON.stringify(data.dictionary));
+    data.dictionary = lio.compress(JSON.stringify(data.dictionary));
 
     // shorten the URL by removing the protocol. It will be assumed to be https lol
     if ("sourceURL" in data) {
@@ -1144,29 +1170,39 @@ const packLinkData = () => {
         data.sourceURL = url;
     }
 
-    return Tools.renameObjectKeys(compileSaveData(), {
+    Tools.renameObjectKeys(data, {
         dictionary: "d",
-        sourceURL: "u",
         title: "t",
-        source: "s",
+        sourceName: "s",
+        sourceURL: "u",
         languagePrompts: "lp",
         languageAnswers: "la"
     });
+
+    return data;
 }
 
-const unpackLinkData = () => {
+const unpackLinkData = (data) => {
+    Tools.renameObjectKeys(data, {
+        d: "dictionary",
+        t: "title",
+        s: "sourceName",
+        u: "sourceURL",
+        lp: "languagePrompts",
+        la: "languageAnswers"
+    });
 
-}
+    // Cannot proceed without dictionary
+    if (!data.dictionary) {
+        return;
+    } else {
+        data.dictionary = JSON.parse(lio.decompress(data.dictionary));
+    }
 
-const linkDataIsDefault = () => {
-
+    Receiver.handleIncomingData(data);
 }
 
 const copyShareURL = () => {
-    if (stage.hiding("edit") || !shareURLIsValid()) {
-        return;
-    }
-
     copyToast = Copy.toast(copyToast, $("#shareURL").val(), 'Copied share URL!');
 };
 
@@ -1378,10 +1414,10 @@ const handleChangeInvertDictionary = () => {
 };
 
 const addSourceURLProtocol = (sourceURL) => {
-    if (! sourceURL) {
+    if (!sourceURL) {
         sourceURL = "";
     } else {
-        if (! sourceURL.startsWith("http")) {
+        if (!sourceURL.startsWith("http")) {
             sourceURL = "https://" + sourceURL;
         }
     }
@@ -1627,7 +1663,9 @@ let lio = new LinkIO(
     baseURL,
     packLinkData,
     unpackLinkData,
-    linkDataIsDefault
+    () => {
+        !app.deckHasChanged();
+    }
 );
 
 $(document).ready(initialize);
