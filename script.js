@@ -23,36 +23,15 @@ class App {
         return (!! this.deck) && (! this.deck.equals(defaultDeck));
     }
 
-    optionsHaveChanged = () => {
-        return [
-            options.volume.value() !== optDefaultVolume,
-            options.voicePromptsRate.value() !== optDefaultVoicePromptsRate,
-            options.voiceAnswersRate.value() !== optDefaultVoiceAnswersRate,
-
-            options.showPrompt.value() !== optDefaultShowPrompt,
-            options.showAnswer.value() !== optDefaultShowAnswer,
-            options.sayPrompt.value() !== optDefaultSayPrompt,
-            options.sayAnswer.value() !== optDefaultSayAnswer,
-
-            options.randomizeOrder.value() !== optDefaultRandomizeOrder,
-            options.invertDictionary.value() !== optDefaultInvertDictionary,
-            options.silentParentheses.value() !== optDefaultSilentParentheses,
-            options.silentAlternatives.value() !== optDefaultSilentAlternatives
-
-            // TODO missing the voice selection?
-        ].some(Boolean);
-    }
-
     reset = () => {
         speechSynthesis.cancel(); // JIC I guess?
 
-        this.voiceLanguages = {};
+        this.voiceLanguages = {}; // TODO ??
 
-        this.deck = null;
-        this.playthrough = null;
+        this.setDefault();
+        options.setDynamicOptionDefaults();
 
         View.updateControls();
-        this.setDefault();
     }
 
     handleDeckChange = (editorArgs) => {
@@ -346,6 +325,26 @@ class Options {
         this.invertDictionary.change(handleChangeInvertDictionary);
         this.silentParentheses.change(View.updateControls);
         this.silentAlternatives.change(View.updateControls);
+    }
+
+    areDefault = () => {
+        return [
+            options.volume.value() === optDefaultVolume,
+            options.voicePromptsRate.value() === optDefaultVoicePromptsRate,
+            options.voiceAnswersRate.value() === optDefaultVoiceAnswersRate,
+
+            options.showPrompt.value() === optDefaultShowPrompt,
+            options.showAnswer.value() === optDefaultShowAnswer,
+            options.sayPrompt.value() === optDefaultSayPrompt,
+            options.sayAnswer.value() === optDefaultSayAnswer,
+
+            options.randomizeOrder.value() === optDefaultRandomizeOrder,
+            options.invertDictionary.value() === optDefaultInvertDictionary,
+            options.silentParentheses.value() === optDefaultSilentParentheses,
+            options.silentAlternatives.value() === optDefaultSilentAlternatives
+
+            // TODO missing the voice selection?
+        ].every(Boolean);
     }
 }
 
@@ -958,7 +957,7 @@ class View {
 
         // minor optimization
         let deckHasChanged = app.deckHasChanged();
-        let optionsHaveChanged = app.optionsHaveChanged();
+        let optionsHaveChanged = ! options.areDefault();
         let editContentExists = !! $('#editRaw').val().trim();
 
         View.toggleControl($('#btnReset'), deckHasChanged || optionsHaveChanged);
