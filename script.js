@@ -1130,7 +1130,28 @@ const compileSaveData = () => {
 /* Link IO */
 
 const packLinkData = () => {
+    let data = compileSaveData();
 
+    // compress the dict
+    data.dictionary = LinkIO.compress(JSON.stringify(data.dictionary));
+
+    // shorten the URL
+    if ("sourceURL" in data) {
+        let url = data.sourceURL;
+        if (url.includes("://")) {
+            url = url.split("://")[1];
+        }
+        data.sourceURL = url;
+    }
+
+    return Tools.renameObjectKeys(compileSaveData(), {
+        dictionary: "d",
+        sourceURL: "u",
+        title: "t",
+        source: "s",
+        languagePrompts: "lp",
+        languageAnswers: "la"
+    });
 }
 
 const unpackLinkData = () => {
@@ -1140,59 +1161,6 @@ const unpackLinkData = () => {
 const linkDataIsDefault = () => {
 
 }
-
-const formatURLParams = () => {
-    let _data = compileSaveData();
-
-    // compress the dict
-
-    _data["dictionary"] = _compress(JSON.stringify(_data["dictionary"]));
-
-    // shorten the URL
-
-    if ("sourceURL" in _data) {
-        let surl = _data["sourceURL"];
-        if (surl.includes("://")) {
-            surl = surl.split("://")[1];
-        }
-        _data["sourceURL"] = surl;
-    }
-
-    // encode components
-
-    if ("title" in _data) {
-        _data["title"] = encodeURIComponent(_data["title"]);
-    }
-
-    if ("source" in _data) {
-        _data["source"] = encodeURIComponent(_data["source"]);
-    }
-
-    if ("sourceURL" in _data) {
-        _data["sourceURL"] = encodeURIComponent(_data["sourceURL"]);
-    }
-
-    // shorten keys
-
-    Tools.renameObjectKeys(_data, {
-        dictionary: "d",
-        sourceURL: "u",
-        title: "t",
-        source: "s",
-        languagePrompts: "lp",
-        languageAnswers: "la"
-    });
-
-    return new URLSearchParams(_data);
-};
-
-const _compress = (data) => {
-    return LZString.compressToEncodedURIComponent(data);
-};
-
-const _decompress = (data) => {
-    return LZString.decompressFromEncodedURIComponent(data);
-};
 
 const copyShareURL = () => {
     if (stage.hiding("edit") || !shareURLIsValid()) {
