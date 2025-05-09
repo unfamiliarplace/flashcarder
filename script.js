@@ -1209,6 +1209,7 @@ const updateVoiceLanguages = () => {
 
         languageToNiceName[voice.lang.toLowerCase()] = niceName;
         languageSet.add(voice.lang.toLowerCase());
+
     }
 
     voiceLanguages = [];
