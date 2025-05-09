@@ -1132,7 +1132,7 @@ const compileSaveData = () => {
 const packLinkData = () => {
     let data = compileSaveData();
 
-    // compress the dict
+    // compress the dict (the only component that seems to benefit)
     data.dictionary = LinkIO.compress(JSON.stringify(data.dictionary));
 
     // shorten the URL
