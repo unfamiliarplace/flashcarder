@@ -1,5 +1,4 @@
 class App {
-    options;
     deck;
     invertedDeck;
     playthrough;
@@ -13,7 +12,7 @@ class App {
     }
 
     getActiveDeck = () => {
-        return (app.options.invertDictionary.value()) ? app.invertedDeck : app.deck;
+        return (options.invertDictionary.value()) ? this.invertedDeck : this.deck;
     }
 
     setDefault = () => {
@@ -26,19 +25,19 @@ class App {
 
     optionsHaveChanged = () => {
         return [
-            app.options.volume.value() !== optDefaultVolume,
-            app.options.voicePromptsRate.value() !== optDefaultVoicePromptsRate,
-            app.options.voiceAnswersRate.value() !== optDefaultVoiceAnswersRate,
+            options.volume.value() !== optDefaultVolume,
+            options.voicePromptsRate.value() !== optDefaultVoicePromptsRate,
+            options.voiceAnswersRate.value() !== optDefaultVoiceAnswersRate,
 
-            app.options.showPrompt.value() !== optDefaultShowPrompt,
-            app.options.showAnswer.value() !== optDefaultShowAnswer,
-            app.options.sayPrompt.value() !== optDefaultSayPrompt,
-            app.options.sayAnswer.value() !== optDefaultSayAnswer,
+            options.showPrompt.value() !== optDefaultShowPrompt,
+            options.showAnswer.value() !== optDefaultShowAnswer,
+            options.sayPrompt.value() !== optDefaultSayPrompt,
+            options.sayAnswer.value() !== optDefaultSayAnswer,
 
-            app.options.randomizeOrder.value() !== optDefaultRandomizeOrder,
-            app.options.invertDictionary.value() !== optDefaultInvertDictionary,
-            app.options.silentParentheses.value() !== optDefaultSilentParentheses,
-            app.options.silentAlternatives.value() !== optDefaultSilentAlternatives
+            options.randomizeOrder.value() !== optDefaultRandomizeOrder,
+            options.invertDictionary.value() !== optDefaultInvertDictionary,
+            options.silentParentheses.value() !== optDefaultSilentParentheses,
+            options.silentAlternatives.value() !== optDefaultSilentAlternatives
 
             // TODO missing the voice selection?
         ].some(Boolean);
@@ -52,8 +51,7 @@ class App {
         this.deck = null;
         this.playthrough = null;
 
-        toggleControl($("#btnReset"), false);
-
+        View.updateControls();
         this.setDefault();
     }
 
@@ -66,8 +64,7 @@ class App {
         $('#editItemsHeading').text(`Items (${n})`);
         $('#infoDenom').text(n);
 
-        displaySamples();
-        populateEditor(editorArgs);
+        Editor.populate(editorArgs);
         this.handleRestartingChange();
     }
 
@@ -78,12 +75,10 @@ class App {
 
     handleGeneralChange = () => {
         $("#title").text(app.deck.title);
-        updateSourceDisplay();
-        updateCardDisplay();
+        View.updateSourceView();
+        View.updateCardView();
 
-        updateControls();
-
-        // editLanguageField();
+        View.updateControls();
         // populateShareURL();
     }
 }
@@ -162,7 +157,7 @@ class Playthrough {
             this.order.push(i);
         }
 
-        if (app.options.randomizeOrder.value()) {
+        if (options.randomizeOrder.value()) {
             this.order = Tools.shuffle(this.order);
         }
     }
@@ -194,8 +189,8 @@ class Playthrough {
         return [
             this.state === PlaythroughState.AfterNext,
             [
-                app.options.showAnswer.value() === 'showAnswerReveal',
-                app.options.sayAnswer.value()
+                options.showAnswer.value() === 'showAnswerReveal',
+                options.sayAnswer.value()
             ].some(Boolean)
         ].every(Boolean);
     }
@@ -205,19 +200,19 @@ class Playthrough {
     }
 
     sayPrompt = () => {
-        if (app.options.sayPrompt.value()) {
+        if (options.sayPrompt.value()) {
             speechSynthesis.cancel();
             let voice = $("#optVoicePrompts").val(); // TODO
-            let rate = app.options.voicePromptsRate.value() / 100
+            let rate = options.voicePromptsRate.value() / 100
             sayUtterance(prompt, voice, rate);
         }
     }
 
     sayReveal = () => {
-        if (app.options.sayAnswer.value()) {
+        if (options.sayAnswer.value()) {
             speechSynthesis.cancel();
             let voice = $("#optVoiceAnswers").val(); // TODO
-            let rate = app.options.voiceAnswersRate.value() / 100;
+            let rate = options.voiceAnswersRate.value() / 100;
             sayUtterance(this.answer, voice, rate);
         }
     }
@@ -231,8 +226,8 @@ class Playthrough {
         // TODO What if they have show answer on next and read aloud on reveal?
         this.sayPrompt();
 
-        updateCardDisplay();
-        updateControls();
+        View.updateCardView();
+        View.updateControls();
     };
 
     previous = () => {
@@ -247,8 +242,8 @@ class Playthrough {
 
         this.sayPrompt();
 
-        updateCardDisplay();
-        updateControls();
+        View.updateCardView();
+        View.updateControls();
     }
 
     reveal = () => {
@@ -256,8 +251,8 @@ class Playthrough {
 
         this.sayReveal();
 
-        updateCardDisplay();
-        updateControls();
+        View.updateCardView();
+        View.updateControls();
     };
 
     restart = () => {
@@ -268,8 +263,8 @@ class Playthrough {
 
         speechSynthesis.cancel();
 
-        updateCardDisplay();
-        updateControls();
+        View.updateCardView();
+        View.updateControls();
     };
 }
 
@@ -288,7 +283,7 @@ class Options {
     silentParentheses;
     silentAlternatives;
 
-    constructor() {
+    initialize = () => {
         this.createDynamicOptions();
         this.setDynamicOptionDefaults();
         this.bindDynamicOptions();
@@ -335,23 +330,22 @@ class Options {
         this.silentParentheses.value(optDefaultSilentParentheses);
         this.silentAlternatives.value(optDefaultSilentAlternatives);
 
-        toggleControl($("#btnSetDefaultOptions"), false);
-        toggleControl($('#btnReset'), app.deckHasChanged());
+        View.updateControls();
     };
 
     bindDynamicOptions = () => {
-        this.showPrompt.change(toggleTextPromptVisibility);
-        this.showAnswer.change(toggleTextPromptVisibility);
+        this.showPrompt.change(View.toggleTextPromptVisibility);
+        this.showAnswer.change(View.toggleTextPromptVisibility);
 
-        $("#optionsPanel input").change(updateControls);
-        $("#optionsPanel select").change(updateControls);
-        this.voiceAnswersRate.change(updateControls);
-        this.voicePromptsRate.change(updateControls);
+        $("#optionsPanel input").change(View.updateControls);
+        $("#optionsPanel select").change(View.updateControls);
+        this.voiceAnswersRate.change(View.updateControls);
+        this.voicePromptsRate.change(View.updateControls);
 
-        this.randomizeOrder.change(changeOptionAndRestart);
+        this.randomizeOrder.change(app.handleRestartingChange);
         this.invertDictionary.change(handleChangeInvertDictionary);
-        this.silentParentheses.change(updateControls);
-        this.silentAlternatives.change(updateControls);
+        this.silentParentheses.change(View.updateControls);
+        this.silentAlternatives.change(View.updateControls);
     }
 }
 
@@ -632,10 +626,11 @@ class Downloader {
         let filename = "";
 
         // core element
-        if ("title" in data) {
-            filename = title;
-        } else if ("source" in data) {
-            filename = source;
+
+        if (!! data.title) {
+            filename = data.title;
+        } else if (!! data.source) {
+            filename = data.source;
         }
 
         // separate from timestamp
@@ -645,7 +640,7 @@ class Downloader {
 
         // sanitization characters
         // https://gist.github.com/barbietunnie/7bc6d48a424446c44ff4
-        let illegalRe = /[\/\?<>\\:\*\|"]/g;
+        let illegalRe = /[\/?<>\\:*|"]/g;
         let controlRe = /[\x00-\x1f\x80-\x9f]/g;
         let reservedRe = /^\.+$/;
         let windowsReservedRe = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
@@ -690,10 +685,6 @@ class Downloader {
     };
 }
 
-const upload = () => {
-    $("#btnUpload").click();
-};
-
 class Receiver {
 
     static ameliorateData = (data) => {
@@ -737,126 +728,335 @@ class Receiver {
     };
 }
 
-const toggleVisibility = (element, visible) => {
-    if (visible) {
-        element.removeClass("hide");
-    } else {
-        element.addClass("hide");
-    }
-}
+class Editor {
+    static populateLanguages = () => {
+        let select, option, optionValue, optionText;
 
-const toggleControl = (control, enable) => {
-    control.prop("disabled", !enable);
-};
+        for (let id of ["editLanguagePrompts", "editLanguageAnswers"]) {
+            select = $(`#${id}`);
+            select.empty();
 
-const updateControls = () => {
-    toggleControl($("#btnNext"), app.playthrough.canNext());
-    toggleControl($("#btnPrevious"), app.playthrough.canPrevious());
-    toggleControl($("#btnReveal"), app.playthrough.canReveal());
-    toggleControl($("#btnRestart"), app.playthrough.canRestart());
-
-    // minor optimization
-    let deckHasChanged = app.deckHasChanged();
-    let optionsHaveChanged = app.optionsHaveChanged();
-    let editContentExists = !! $('#editRaw').val().trim();
-
-    toggleControl($('#btnReset'), deckHasChanged || optionsHaveChanged);
-    toggleControl($('#btnEditSetDefaults'), deckHasChanged);
-
-    toggleControl($('#btnShare'), editContentExists);
-    toggleControl($('.buttonDownload'), editContentExists);
-    toggleControl($('.editClearButton'), editContentExists);
-
-    toggleControl($('#btnSetDefaultOptions'), optionsHaveChanged);
-}
-
-const populateEditorLanguages = () => {
-
-    for (let id of ["editLanguagePrompts", "editLanguageAnswers"]) {
-        select = $(`#${id}`);
-        select.empty();
-
-        option = `<option value="--">--</option>`;
-        select.append(option);
-
-        for (let lang of Languages) {
-            optionValue = lang['code'].toLowerCase();
-            optionText = lang['name'];
-            option = `<option value="${optionValue}">${optionText}</option>`;
+            option = `<option value="--">--</option>`;
             select.append(option);
+
+            for (let lang of Languages) {
+                optionValue = lang['code'].toLowerCase();
+                optionText = lang['name'];
+                option = `<option value="${optionValue}">${optionText}</option>`;
+                select.append(option);
+            }
+        }
+
+        $('#editLanguagePrompts').val(app.deck.languagePrompts);
+        $('#editLanguageAnswers').val(app.deck.languageAnswers);
+    }
+
+    static populateMeta = () => {
+        $('#editTitle').val(app.deck.title);
+        $('#editSourceName').val(app.deck.sourceName);
+        $('#editSourceURL').val(app.deck.sourceURL);
+
+        Editor.populateLanguages();
+    }
+
+    static formatItem = (i, key, val) => {
+        let inputPrompt = `<input class='editItemInput editItemPrompt' value='${key}'>`;
+        let inputAnswer = `<input class='editItemInput editItemAnswer' value='${val}'>`;
+        let btnDelete = `<button class='btnEditDeleteItem buttonBase buttonEffects' data-item-index="${i}" id='btnEditDeleteItem-${i}' title='Delete this item'>-</button>`;
+        return `<div class='editItem editItemContent flexRow' data-item-index="${i}" id='editItem-${i}'>${inputPrompt}${inputAnswer}${btnDelete}</div>`;
+    }
+
+    static formatAddItemButton = () => {
+        let btnAdd = `<button class='btnEditAddItem buttonBase buttonEffects' id='btnEditAddItem' title='Add a new item'>+</button>`;
+        return `<div class='editItem flexRow' id='editItem-Add'>${btnAdd}</div>`;
+    }
+
+    static populateItems = () => {
+        $('#editItemsList').html("");
+
+        let items = "";
+        let val;
+        let i = 0;
+
+        for (let key of Object.keys(app.deck.dictionary)) {
+            val = app.deck.dictionary[key];
+            items += Editor.formatItem(i, key, val);
+            i += 1;
+        }
+
+        items += Editor.formatAddItemButton();
+
+        // paint
+        $('#editItemsList').html(items);
+
+        // bind
+        $('.editItemInput').keyup(Editor.editItemField);
+        $('.editItemInput').change(Editor.editItemField);
+        $('#btnEditAddItem').click(Editor.addItem);
+        $('.btnEditDeleteItem').click(e => {
+            Editor.deleteItem(e);
+        });
+    }
+
+    static populateRaw = () => {
+        let raw = "";
+        let val;
+
+        for (let key of Object.keys(app.deck.dictionary)) {
+            val = app.deck.dictionary[key];
+            raw += `${key}\t${val}\n`;
+        }
+
+        $('#editRaw').val(raw.trim());
+    }
+
+    static populate = (args) => {
+        Editor.populateMeta();
+
+        // These checks prevent editing items or raw from immediately parsing half-formed data as an error
+        if (! args.skipItems) {
+            Editor.populateItems();
+        }
+
+        if (! args.skipRaw) {
+            Editor.populateRaw();
         }
     }
 
-    $('#editLanguagePrompts').val(app.deck.languagePrompts);
-    $('#editLanguageAnswers').val(app.deck.languageAnswers);
-}
+    static editMetaField = () => {
 
-const populateEditorMeta = () => {
-    $('#editTitle').val(app.deck.title);
-    $('#editSourceName').val(app.deck.sourceName);
-    $('#editSourceURL').val(app.deck.sourceURL);
+        app.deck.title = $('#editTitle').val().trim();
+        app.deck.sourceName = $('#editSourceName').val().trim();
+        app.deck.sourceURL = addSourceURLProtocol($('#editSourceURL').val().trim());
 
-    populateEditorLanguages();
-}
+        app.deck.languagePrompts = $('#editLanguagePrompts').val();
+        app.deck.languageAnswers = $('#editLanguageAnswers').val();
 
-const formatEditorItem = (i, key, val) => {
-    return `<div class='editItem editItemContent flexRow' data-item-index="${i}" id='editItem-${i}'><input class='editItemInput editItemPrompt' value='${key}'><input class='editItemInput editItemAnswer' value='${val}'><button class='btnEditDeleteItem buttonBase buttonEffects' data-item-index="${i}" id='btnEditDeleteItem-${i}' title='Delete this item'>-</button></div>`;
-}
-
-const formatEditorAddItem = () => {
-    return `<div class='editItem flexRow' id='editItem-Add'><button class='btnEditAddItem buttonBase buttonEffects' id='btnEditAddItem' title='Add a new item'>+</button></div>`;
-}
-
-const populateEditorItems = () => {
-    $('#editItemsList').html("");
-
-    let items = "";
-    let val;
-    let i = 0;
-
-    for (let key of Object.keys(app.deck.dictionary)) {
-        val = app.deck.dictionary[key];
-        items += formatEditorItem(i, key, val);
-        i += 1;
+        app.handleGeneralChange();
     }
 
-    items += formatEditorAddItem();
-
-    // paint
-    $('#editItemsList').html(items);
-
-    // bind
-    $('.editItemInput').keyup(editItemField);
-    $('.editItemInput').change(editItemField);
-    $('#btnEditAddItem').click(editAddItem);
-    $('.btnEditDeleteItem').click(e => {
-        editDeleteItem(e);
-    });
-}
-
-const populateEditorRaw = () => {
-    let raw = "";
-    let val;
-
-    for (let key of Object.keys(app.deck.dictionary)) {
-        val = app.deck.dictionary[key];
-        raw += `${key}\t${val}\n`;
+    static editLanguageField = () => {
+        Editor.editMetaField();
+        updateVoiceOptions();
     }
 
-    $('#editRaw').val(raw.trim());
-}
+    static editItemField = () => {
+        let dict = {};
 
-const populateEditor = (args) => {
-    populateEditorMeta();
+        let els = $('.editItemContent');
+        let key, val;
 
-    if (! args.skipItems) {
-        populateEditorItems();
+        els.each(function () {
+            key = $(this).find('.editItemPrompt').val().trim();
+            val = $(this).find('.editItemAnswer').val().trim();
+
+            if ((key !== "") && (val !== "")) {
+                dict[key] = val;
+            }
+        });
+
+        app.deck.dictionary = dict;
+        app.handleDeckChange({'skipItems': true});
     }
 
-    if (! args.skipRaw) {
-        populateEditorRaw();
+    static editRawField = () => {
+        let raw = $('#editRaw').val().trim();
+        let parsed = Parser.parseTXT(raw);
+
+        app.deck.dictionary = parsed['dictionary'];
+        app.handleDeckChange({'skipRaw': true});
+    }
+
+    static clearAllFields = () => {
+        Editor.clearMetaFields();
+        Editor.clearItems();
+        Editor.clearRaw();
+    }
+
+    static clearMetaFields = () => {
+        $('#editTitle').val("");
+        $('#editSourceName').val("");
+        $('#editSourceURL').val("");
+        $('#editLanguagePrompts').val("--");
+        $('#editLanguageAnswers').val("--");
+        Editor.editMetaField();
+        Editor.editLanguageField();
+    }
+
+    static clearItems = () => {
+        $('.editItemContent').each(function() {
+            this.remove();
+        });
+        Editor.editItemField();}
+
+    static clearRaw = () => {
+        $('#editRaw').val("");
+        Editor.editRawField();
+    }
+
+    static addItem = () => {
+        let list = $('#editItemsList');
+
+        let highest = 0;
+        let current;
+        $('.editItemContent').each(function () {
+            current = parseInt(this.id.split('-')[1]);
+            if (current >= highest) {
+                highest = current + 1;
+            }
+        });
+
+        let item = Editor.formatItem(highest, "", "");
+
+        $('#editItem-Add').remove();
+        list.append(item);
+
+        $('.editItemInput').unbind();
+        $('.editItemInput').keyup(Editor.editItemField);
+        $('.editItemInput').change(Editor.editItemField);
+
+        list.append(Editor.formatAddItemButton());
+        $('#btnEditAddItem').click(Editor.addItem);
+        $('.btnEditDeleteItem').unbind();
+        $('.btnEditDeleteItem').click(e => {
+            Editor.deleteItem(e);
+        });
+    }
+
+    static deleteItem = (e) => {
+        let i = $(e.target).attr('data-item-index');
+        $(`#editItem-${i}`).remove();
+        Editor.editItemField();
     }
 }
+
+class View {
+    static toggleVisibility = (element, visible) => {
+        if (visible) {
+            element.removeClass("hide");
+        } else {
+            element.addClass("hide");
+        }
+    }
+
+    static toggleControl = (control, enable) => {
+        control.prop("disabled", !enable);
+    };
+
+    static updateControls = () => {
+        if (!! app.playthrough) {
+            View.toggleControl($("#btnNext"), app.playthrough.canNext());
+            View.toggleControl($("#btnPrevious"), app.playthrough.canPrevious());
+            View.toggleControl($("#btnReveal"), app.playthrough.canReveal());
+            View.toggleControl($("#btnRestart"), app.playthrough.canRestart());
+        } else {
+            View.toggleControl($("#btnNext"), false);
+            View.toggleControl($("#btnPrevious"), false);
+            View.toggleControl($("#btnReveal"), false);
+            View.toggleControl($("#btnRestart"), false);
+        }
+
+        // minor optimization
+        let deckHasChanged = app.deckHasChanged();
+        let optionsHaveChanged = app.optionsHaveChanged();
+        let editContentExists = !! $('#editRaw').val().trim();
+
+        View.toggleControl($('#btnReset'), deckHasChanged || optionsHaveChanged);
+        View.toggleControl($('#btnEditSetDefaults'), deckHasChanged);
+
+        View.toggleControl($('#btnShare'), editContentExists); // TODO also needs to check validity of url (length)
+        View.toggleControl($('.buttonDownload'), editContentExists);
+        View.toggleControl($('.editClearButton'), editContentExists);
+
+        View.toggleControl($('#btnSetDefaultOptions'), optionsHaveChanged);
+    }
+
+    static toggleWordVisibility = (holder, hider, show) => {
+        View.toggleVisibility(holder, show);
+        View.toggleVisibility(hider, !show);
+    };
+
+    static toggleTextPromptVisibility = () => {
+        let optionOne = [
+            app.playthrough.state === PlaythroughState.AfterNext,
+            options.showPrompt.value() === 'showPromptNext'
+        ].every(Boolean);
+
+        let optionTwo = [
+            app.playthrough.state === PlaythroughState.AfterReveal,
+            [
+                options.showPrompt.value() === 'showPromptNext',
+                options.showPrompt.value() === 'showPromptReveal'
+            ].some(Boolean)
+        ].every(Boolean);
+
+        View.toggleWordVisibility($("#prompt"), $("#promptHider"), optionOne || optionTwo);
+    };
+
+    static toggleTextAnswerVisibility = () => {
+        let optionOne = [
+            app.playthrough.state === PlaythroughState.AfterNext,
+            options.showAnswer.value() === 'showAnswerNext'
+        ].every(Boolean);
+
+        let optionTwo = [
+            app.playthrough.state === PlaythroughState.AfterReveal,
+            [
+                options.showAnswer.value() === 'showAnswerNext',
+                options.showAnswer.value() === 'showAnswerReveal'
+            ].some(Boolean)
+        ].every(Boolean);
+
+        View.toggleWordVisibility($("#answer"), $("#answerHider"), optionOne || optionTwo);
+    };
+
+    static updateSamplesView = () => {
+        let deck = app.getActiveDeck();
+
+        let keys = Object.keys(deck.dictionary);
+        let sP = keys[0];
+        let sA = deck.dictionary[sP];
+
+        $("#samplePrompt").text(`e.g. "${sP}"`);
+        $("#sampleAnswer").text(`e.g. "${sA}"`);
+    };
+
+    static updateSourceView = () => {
+        let html = "";
+
+        if (app.deck.sourceName || app.deck.sourceURL) {
+            html += "Source: ";
+        }
+
+        if (! app.deck.sourceURL) {
+            html += app.deck.sourceName;
+        } else {
+            let sourceText = !!app.deck.sourceName ? app.deck.sourceName : "Link";
+            html += `<a href="${app.deck.sourceURL}" title="Source">${sourceText}</a>`;
+        }
+
+        html = `<div id="source">${html}</div>`;
+        $("#sourceContainer").html(html);
+    }
+
+    static updateCardView = () => {
+        $("#prompt").text(app.playthrough.prompt);
+        $("#answer").text(app.playthrough.answer);
+
+        View.toggleTextPromptVisibility();
+        View.toggleTextAnswerVisibility();
+
+        $("#infoCount").text(app.playthrough.index + 1);
+        View.toggleVisibility($("#toBeginPanel"),
+            app.playthrough.state === PlaythroughState.InitializedButNotStarted);
+    }
+
+    static updateCopyrightView = () => {
+        $('#copyrightYear').text(new Date().getFullYear());
+    }
+}
+
+
 
 const populateShareURL = () => {
     createShareURL();
@@ -1131,11 +1331,11 @@ const setLanguageOptions = () => {
 
 const makeUtterance = (text, voiceName, rate) => {
 
-    if (app.options.silentParentheses.value()) {
+    if (options.silentParentheses.value()) {
         text = text.replace(/\(.*?\)/i, "");
     }
 
-    if (app.options.silentAlternatives.value()) {
+    if (options.silentAlternatives.value()) {
         let re = /\/.*/i;
         text = text.replace(re, "");
     }
@@ -1150,7 +1350,7 @@ const makeUtterance = (text, voiceName, rate) => {
 
     utterance.pitch = 1;
     utterance.rate = rate;
-    utterance.volume = app.options.volume.value() / 100;
+    utterance.volume = options.volume.value() / 100;
     return utterance;
 };
 
@@ -1163,65 +1363,17 @@ const sayUtterance = (text, voiceName, rate) => {
     speechSynthesis.speak(utterance);
 };
 
-const toggleWord = (holder, hider, show) => {
-    toggleVisibility(holder, show);
-    toggleVisibility(hider, !show);
-};
 
-const toggleTextPromptVisibility = () => {
-    let optionOne = [
-        app.playthrough.state === PlaythroughState.AfterNext,
-        app.options.showPrompt.value() === 'showPromptNext'
-    ].every(Boolean);
-
-    let optionTwo = [
-        app.playthrough.state === PlaythroughState.AfterReveal,
-        [
-            app.options.showPrompt.value() === 'showPromptNext',
-            app.options.showPrompt.value() === 'showPromptReveal'
-        ].some(Boolean)
-    ].every(Boolean);
-
-    toggleWord($("#prompt"), $("#promptHider"), optionOne || optionTwo);
-};
-
-const toggleTextAnswerVisibility = () => {
-    let optionOne = [
-        app.playthrough.state === PlaythroughState.AfterNext,
-        app.options.showAnswer.value() === 'showAnswerNext'
-    ].every(Boolean);
-
-    let optionTwo = [
-        app.playthrough.state === PlaythroughState.AfterReveal,
-        [
-            app.options.showAnswer.value() === 'showAnswerNext',
-            app.options.showAnswer.value() === 'showAnswerReveal'
-        ].some(Boolean)
-    ].every(Boolean);
-
-    toggleWord($("#answer"), $("#answerHider"), optionOne || optionTwo);
-};
-
-const displaySamples = () => {
-    let deck = app.getActiveDeck();
-
-    let keys = Object.keys(deck.dictionary);
-    let sP = keys[0];
-    let sA = deck.dictionary[sP];
-
-    $("#samplePrompt").text(`e.g. "${sP}"`);
-    $("#sampleAnswer").text(`e.g. "${sA}"`);
-};
 
 const handleChangeInvertDictionary = () => {
 
     let vLP = $("#optLanguagePrompts").val();
     let vVP = $("#optVoicePrompts").val();
-    let vRP = app.options.voicePromptsRate.value();
+    let vRP = options.voicePromptsRate.value();
 
     let vLA = $("#optLanguageAnswers").val();
     let vVA = $("#optVoiceAnswers").val();
-    let vRA = app.options.voiceAnswersRate.value();
+    let vRA = options.voiceAnswersRate.value();
 
     // TODO
     $("#optLanguagePrompts").val(vLA).change();
@@ -1234,135 +1386,17 @@ const handleChangeInvertDictionary = () => {
     $("#optVoicePrompts").val(vVA).change();
     $("#optVoiceAnswers").val(vVP).change();
 
-    app.options.voicePromptsRate.value(vRA);
-    app.options.voiceAnswersRate.value(vRP);
+    options.voicePromptsRate.value(vRA);
+    options.voiceAnswersRate.value(vRP);
 
     // basics
-    displaySamples();
-    updateControls();
+    View.updateSamplesView();
+
     app.playthrough.updateCard();
-    updateCardDisplay();
-};
-
-const changeOptionAndRestart = () => {
-    updateControls();
-    app.handleRestartingChange();
-};
-
-const editMetaField = () => {
-
-    app.deck.title = $('#editTitle').val().trim();
-    app.deck.sourceName = $('#editSourceName').val().trim();
-    app.deck.sourceURL = Receiver.ameliorateSourceURL($('#editSourceURL').val().trim());
-
-    app.deck.languagePrompts = $('#editLanguagePrompts').val();
-    app.deck.languageAnswers = $('#editLanguageAnswers').val();
+    View.updateCardView();
 
     app.handleGeneralChange();
-
-    // TODO have this be toggleable too
-    toggleControl($("#btnReset"), true);
-}
-
-const editLanguageField = () => {
-    editMetaField();
-    updateVoiceOptions();
-}
-
-const editItemField = () => {
-    let dict = {};
-
-    let els = $('.editItemContent');
-    let key, val;
-
-    els.each(function () {
-        key = $(this).find('.editItemPrompt').val().trim();
-        val = $(this).find('.editItemAnswer').val().trim();
-
-        if ((key !== "") && (val !== "")) {
-            dict[key] = val;
-        }
-    });
-
-
-    // TODO need to avoid repopulating items here
-
-    app.deck.dictionary = dict;
-    app.handleDeckChange({'skipItems': true});
-    toggleControl($("#btnReset"), true);
-}
-
-const editRawField = () => {
-    let raw = $('#editRaw').val().trim();
-    let parsed = Parser.parseTXT(raw);
-
-    // TODO need to avoid repopulating raw here
-
-    app.deck.dictionary = parsed['dictionary'];
-    app.handleDeckChange({'skipRaw': true});
-    toggleControl($("#btnReset"), true);
-}
-
-const editClearAll = () => {
-    editClearMeta();
-    editClearItems();
-}
-
-const editClearMeta = () => {
-    $('#editTitle').val("");
-    $('#editSourceName').val("");
-    $('#editSourceURL').val("");
-    $('#editLanguagePrompts').val("--");
-    $('#editLanguageAnswers').val("--");
-    editMetaField();
-    editLanguageField();
-}
-
-const editClearItems = () => {
-    $('.editItemContent').each(function() {
-        this.remove();
-    });
-    editItemField();}
-
-const editClearRaw = () => {
-    $('#editRaw').val("");
-    editRawField();
-}
-
-const editAddItem = () => {
-    let list = $('#editItemsList');
-
-    let highest = 0;
-    let current;
-    $('.editItemContent').each(function () {
-        current = parseInt(this.id.split('-')[1]);
-        if (current >= highest) {
-            highest = current + 1;
-        }
-    });
-
-    let item = formatEditorItem(highest, "", "");
-
-    $('#editItem-Add').remove();
-    list.append(item);
-
-    $('.editItemInput').unbind();
-    $('.editItemInput').keyup(editItemField);
-    $('.editItemInput').change(editItemField);
-
-    list.append(formatEditorAddItem());
-    $('#btnEditAddItem').click(editAddItem);
-    $('.btnEditDeleteItem').unbind();
-    $('.btnEditDeleteItem').click(e => {
-        editDeleteItem(e);
-    });
-}
-
-const editDeleteItem = (e) => {
-    let i = $(e.target).attr('data-item-index');
-    $(`#editItem-${i}`).remove();
-    editItemField();
-}
+};
 
 const addSourceURLProtocol = (sourceURL) => {
     if (! sourceURL) {
@@ -1375,7 +1409,7 @@ const addSourceURLProtocol = (sourceURL) => {
     return sourceURL;
 }
 
-const createUploadButton = () => {
+const bindUploadButton = () => {
     UploadButton.bind(
         $("#btnUpload"),
         Receiver.handleIncomingFile
@@ -1391,69 +1425,6 @@ const createDropzone = () => {
     );
 };
 
-/* Display updaters */
-
-updateSourceDisplay = () => {
-    let html = "";
-
-    if (app.deck.sourceName || app.deck.sourceURL) {
-        html += "Source: ";
-    }
-
-    if (! app.deck.sourceURL) {
-        html += app.deck.sourceName;
-    } else {
-        let sourceText = !!app.deck.sourceName ? app.deck.sourceName : "Link";
-        html += `<a href="${app.deck.sourceURL}" title="Source">${sourceText}</a>`;
-    }
-
-    html = `<div id="source">${html}</div>`;
-    $("#sourceContainer").html(html);
-}
-
-updateCardDisplay = () => {
-    $("#prompt").text(app.playthrough.prompt);
-    $("#answer").text(app.playthrough.answer);
-
-    toggleTextPromptVisibility();
-    toggleTextAnswerVisibility();
-
-    $("#infoCount").text(app.playthrough.index + 1);
-    toggleVisibility($("#toBeginPanel"),
-        app.playthrough.state === PlaythroughState.InitializedButNotStarted);
-}
-
-/*
-* Possibility-checking aliases... a little redundant, but...
-* Having these checks in the functions themselves requires adding a force flag,
-* and having them as anonymous functions during binding seems uglier than this
-* (especially because keyup and buttons both need to bind them).
-*/
-
-const next = () => {
-    if (app.playthrough.canNext()) {
-        app.playthrough.next();
-    }
-}
-
-const previous = () => {
-    if (app.playthrough.canPrevious()) {
-        app.playthrough.previous();
-    }
-}
-
-const reveal = () => {
-    if (app.playthrough.canReveal()) {
-        app.playthrough.reveal();
-    }
-}
-
-const restart = () => {
-    if (app.playthrough.canRestart()) {
-        app.playthrough.restart();
-    }
-}
-
 /* Binders */
 
 const handleKeyup = (e) => {
@@ -1466,27 +1437,27 @@ const handleKeyup = (e) => {
 
     switch (e.code) {
         case "KeyN":
-            next();
+            $("#btnNext").click();
             break;
 
         case "KeyP":
-            previous();
+            $("#btnPrevious").click();
             break;
 
         case "KeyR":
-            reveal();
+            $("#btnReveal").click();
             break;
 
         case "KeyX":
-            restart();
+            $("#btnRestart").click();
             break;
 
         case "KeyU":
-            upload();
+            $("#btnUpload").click();
             break;
 
         case "KeyZ":
-            app.reset();
+            $("#btnReset").click();
             break;
 
         case "KeyH":
@@ -1506,7 +1477,7 @@ const handleKeyup = (e) => {
             break;
 
         case "KeyD":
-            app.options.setDynamicOptionDefaults();
+            options.setDynamicOptionDefaults();
             break;
 
         case "Escape":
@@ -1521,10 +1492,10 @@ const handleKeyup = (e) => {
 };
 
 const bindGameControls = () => {
-    $("#btnNext").click(next);
-    $("#btnPrevious").click(previous);
-    $("#btnReveal").click(reveal);
-    $("#btnRestart").click(restart);
+    $("#btnNext").click(app.playthrough.next);
+    $("#btnPrevious").click(app.playthrough.previous);
+    $("#btnReveal").click(app.playthrough.reveal);
+    $("#btnRestart").click(app.playthrough.restart);
     $("#btnReset").click(app.reset);
 }
 
@@ -1536,27 +1507,27 @@ const bindShareControls = () => {
 }
 
 const bindOptionsControls = () => {
-    $("#btnSetDefaultOptions").click(app.options.setDynamicOptionDefaults);
+    $("#btnSetDefaultOptions").click(options.setDynamicOptionDefaults);
 }
 
 const bindEditorControls = () => {
-    $('#editTitle').keyup(editMetaField);
-    $('#editSourceName').keyup(editMetaField);
-    $('#editSourceURL').keyup(editMetaField);
-    $('#editTitle').change(editMetaField);
-    $('#editSourceName').change(editMetaField);
-    $('#editSourceURL').change(editMetaField);
+    $('#editTitle').keyup(Editor.editMetaField);
+    $('#editSourceName').keyup(Editor.editMetaField);
+    $('#editSourceURL').keyup(Editor.editMetaField);
+    $('#editTitle').change(Editor.editMetaField);
+    $('#editSourceName').change(Editor.editMetaField);
+    $('#editSourceURL').change(Editor.editMetaField);
 
-    $('#editLanguagePrompts').change(editLanguageField);
-    $('#editLanguageAnswers').change(editLanguageField);
+    $('#editLanguagePrompts').change(Editor.editLanguageField);
+    $('#editLanguageAnswers').change(Editor.editLanguageField);
 
-    $('#editRaw').keyup(editRawField);
-    $('#editRaw').change(editRawField);
+    $('#editRaw').keyup(Editor.editRawField);
+    $('#editRaw').change(Editor.editRawField);
 
-    $('#btnEditClearAll').click(editClearAll);
-    $('#btnEditClearMeta').click(editClearMeta);
-    $('#btnEditClearItems').click(editClearItems);
-    $('#btnEditClearRaw').click(editClearRaw);
+    $('#btnEditClearAll').click(Editor.clearAllFields);
+    $('#btnEditClearMeta').click(Editor.clearMetaFields);
+    $('#btnEditClearItems').click(Editor.clearItems);
+    $('#btnEditClearRaw').click(Editor.clearRaw);
     $('#btnEditSetDefaults').click(app.setDefault);
 }
 
@@ -1565,6 +1536,7 @@ const bind = () => {
     bindShareControls();
     bindOptionsControls();
     bindEditorControls();
+    bindUploadButton();
 
     $(document).keyup(handleKeyup);
     speechSynthesis.onvoiceschanged = updateVoiceOptions;
@@ -1588,27 +1560,23 @@ const addScenes = () => {
     stage.setDefault("game");
 };
 
-const updateCopyrightDisplay = () => {
-    $('#copyrightYear').text(new Date().getFullYear());
-}
-
 // Initialize
 
 const initialize = () => {
-    updateCopyrightDisplay();
+    View.updateCopyrightView();
 
     stage = new _Stage();
     addScenes();
     stage.show("game");
 
     app = new App();
-    app.options = new Options();
+    options = new Options();
+
+    options.initialize();
     app.setDefault();
 
-    createUploadButton();
-    createDropzone();
-
     bind();
+    createDropzone();
 
     updateVoiceOptions();
 
@@ -1646,6 +1614,7 @@ const optDefaultSilentAlternatives = true;
 
 let copyToast;
 let stage;
+let options;
 let app;
 
 $(document).ready(initialize);
