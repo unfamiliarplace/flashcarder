@@ -1135,7 +1135,7 @@ const packLinkData = () => {
     // compress the dict (the only component that seems to benefit)
     data.dictionary = LinkIO.compress(JSON.stringify(data.dictionary));
 
-    // shorten the URL by removing the protocol
+    // shorten the URL by removing the protocol. It will be assumed to be https lol
     if ("sourceURL" in data) {
         let url = data.sourceURL;
         if (url.includes("://")) {
