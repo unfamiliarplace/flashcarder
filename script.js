@@ -1127,6 +1127,20 @@ const compileSaveData = () => {
     return data;
 };
 
+/* Link IO */
+
+const packLinkData = () => {
+
+}
+
+const unpackLinkData = () => {
+
+}
+
+const linkDataIsDefault = () => {
+
+}
+
 const formatURLParams = () => {
     let _data = compileSaveData();
 
@@ -1362,8 +1376,6 @@ const sayUtterance = (text, voiceName, rate) => {
     speechSynthesis.speak(utterance);
 };
 
-
-
 const handleChangeInvertDictionary = () => {
 
     let vLP = $("#optLanguagePrompts").val();
@@ -1407,13 +1419,6 @@ const addSourceURLProtocol = (sourceURL) => {
     }
     return sourceURL;
 }
-
-const bindUploadButton = () => {
-    UploadButton.bind(
-        $("#btnUpload"),
-        Receiver.handleIncomingFile
-    );
-};
 
 const createDropzone = () => {
     DropzoneUniversal.create(
@@ -1517,6 +1522,12 @@ const handleKeyup = (e) => {
     }
 };
 
+const bindUploadButton = () => {
+    UploadButton.bind(
+        $("#btnUpload"),
+        Receiver.handleIncomingFile
+    );
+};
 
 const bindGameControls = () => {
     $("#btnNext").click(next);
@@ -1607,11 +1618,12 @@ const initialize = () => {
 
     updateVoiceOptions();
 
-    readDataFromURL();
+    lio.readURL();
 };
 
 /* Constants */
 
+const baseURL = "https://g.sawczak.com/flashcarder";
 const defaultCSVDelimiter = ",";
 
 const defaultDeck = Deck.fromData({
@@ -1643,5 +1655,11 @@ let copyToast;
 let stage;
 let options;
 let app;
+let lio = new LinkIO(
+    baseURL,
+    packLinkData,
+    unpackLinkData,
+    linkDataIsDefault
+);
 
 $(document).ready(initialize);
