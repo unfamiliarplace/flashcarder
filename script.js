@@ -945,31 +945,28 @@ class Editor {
 
     static editLanguagePromptsField = () => {
         let newLP = $('#editLanguagePrompts').val();
+
+        // If lang didn't change, return
         if (newLP === app.deck.languagePrompts) {
             return;
         }
 
-        /*
-        TODO Notes on what needs to happen
-        1. If lang didn't change, return.
-
-        2. If lang changed, update the deck language.
-        3. Get lang's closest voiceLang.
-        4. If closest voiceLang matches optLang's selection, return.
-
-        5. If there is no closest voiceLang, return. (Or clear optLang??)
-
-        6. Set optLang to closest voiceLang.
-        7. Populate optVoice select.
-        8. Choose the first one.
-         */
-
-        let voiceLanguages = Speech.getLanguages();
+        app.deck.languagePrompts = newLP;
+        updateVoiceOptions($('#optLanguagePrompts'), $('#optVoicePrompts'), newLP);
 
         Editor.editLanguageField();
     }
 
     static editLanguageAnswersField = () => {
+        let newLP = $('#editLanguageAnswers').val();
+
+        // If lang didn't change, return
+        if (newLP === app.deck.languageAnswers) {
+            return;
+        }
+
+        app.deck.languageAnswers = newLP;
+        updateVoiceOptions($('#optLanguageAnswers'), $('#optVoiceAnswers'), newLP);
 
         Editor.editLanguageField();
     }
@@ -1207,30 +1204,22 @@ const copyShareURL = () => {
     copyToast = Copy.toast(copyToast, $("#shareURL").val(), 'Copied share URL!');
 };
 
-const updateVoicePromptsOptions = () => {
-    createVoiceOptions($("#optVoicePrompts"), $("#optLanguagePrompts").val());
-};
+const updateVoiceOptions = (selectLanguage, selectVoice, language) => {
 
-const updateVoiceAnswersOptions = () => {
-    createVoiceOptions($("#optVoiceAnswers"), $("#optLanguageAnswers").val());
-};
+    // Get lang's closest voiceLang. If none, return (or clear optlang and voice?)
+    let closest = Speech.getClosestLanguage(language);
+    if (closest === null) {
+        return; // TODO clear optlang and voice??
+    }
 
-const updateVoiceOptions = () => {
+    // If closest voiceLang matches optLang's selection, return
+    if (closest === selectLanguage.val()) {
+        return;
+    }
 
-    return; // TODO
-    updateVoiceLanguages();
-    createLanguageOptions();
-    updateVoicePromptsOptions();
-    updateVoiceAnswersOptions();
-    setLanguageOptions();
-};
-
-const setLanguageOptions = () => {
-    let _lp = getClosestVoiceLanguage(app.deck.languagePrompts);
-    let _la = getClosestVoiceLanguage(app.deck.languageAnswers);
-
-    $("#optLanguagePrompts").val(_lp).change();
-    $("#optLanguageAnswers").val(_la).change();
+    // Otherwise, set optlang to closest voicelang, repopulate its voices
+    selectLanguage.val(closest);
+    Speech.populateVoiceSelectForLanguage(selectVoice, closest); // auto-chooses first one
 }
 
 const handleChangeInvertDictionary = () => {
