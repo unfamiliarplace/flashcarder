@@ -711,6 +711,8 @@ class Receiver {
 
         if (!!data.sourceURL) {
             data.sourceURL = addSourceURLProtocol(data.sourceURL);
+        } else {
+            data.sourceURL = "";
         }
 
         if (!data.sourceName) {
@@ -946,7 +948,6 @@ class Editor {
 
     static editLanguageAnswersField = () => {
         let newL = $('#editLanguageAnswers').val();
-        console.log('editLA', newL, app.deck.languageAnswers, newL === app.deck.languageAnswers);
 
         // If lang didn't change, return
         if (newL === app.deck.languageAnswers) {
@@ -1105,11 +1106,19 @@ class View {
     };
 
     static updateLanguageOptionDisplay = () => {
-        let lpName = Languages.getLanguageByCode(app.deck.languagePrompts).formatBilingualName();
-        let laName = Languages.getLanguageByCode(app.deck.languageAnswers).formatBilingualName();
-        
-        $('#deckLanguagePromptsNotice').text(lpName);
-        $('#deckLanguageAnswersNotice').text(laName);
+        if (! ['--', ''].includes(app.deck.languagePrompts)) {
+            let lpName = Languages.getLanguageByCode(app.deck.languagePrompts).formatBilingualName();
+            $('#deckLanguagePromptsNotice').text(lpName);
+        } else {
+            $('#deckLanguagePromptsNotice').text("not set");
+        }
+
+        if (! ['--', ''].includes(app.deck.languageAnswers)) {
+            let laName = Languages.getLanguageByCode(app.deck.languageAnswers).formatBilingualName();
+            $('#deckLanguageAnswersNotice').text(laName);
+        } else {
+            $('#deckLanguageAnswersNotice').text("not set");
+        }
     }
 }
 
