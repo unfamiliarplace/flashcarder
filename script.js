@@ -73,8 +73,8 @@ class App {
         $("#title").text(app.deck.title);
         View.updateSourceView();
         View.updateCardView();
+        View.updateShareURLView();
 
-        populateShareURL();
         View.updateControls();
     }
 }
@@ -851,11 +851,6 @@ class Editor {
         app.handleGeneralChange();
     }
 
-    static editLanguageField = () => {
-        Editor.editMetaField();
-        updateVoiceOptions();
-    }
-
     static editItemField = () => {
         let dict = {};
 
@@ -946,6 +941,42 @@ class Editor {
         let i = $(e.target).attr('data-item-index');
         $(`#editItem-${i}`).remove();
         Editor.editItemField();
+    }
+
+    static editLanguagePromptsField = () => {
+        let newLP = $('#editLanguagePrompts').val();
+        if (newLP === app.deck.languagePrompts) {
+            return;
+        }
+
+        /*
+        TODO Notes on what needs to happen
+        1. If lang didn't change, return.
+
+        2. If lang changed, update the deck language.
+        3. Get lang's closest voiceLang.
+        4. If closest voiceLang matches optLang's selection, return.
+
+        5. If there is no closest voiceLang, return. (Or clear optLang??)
+
+        6. Set optLang to closest voiceLang.
+        7. Populate optVoice select.
+        8. Choose the first one.
+         */
+
+        let voiceLanguages = Speech.getLanguages();
+
+        Editor.editLanguageField();
+    }
+
+    static editLanguageAnswersField = () => {
+
+        Editor.editLanguageField();
+    }
+
+    static editLanguageField = () => {
+        View.updateLanguageOptionDisplay();
+        Editor.editMetaField();
     }
 }
 
@@ -1080,16 +1111,20 @@ class View {
     static updateCopyrightView = () => {
         $('#copyrightYear').text(new Date().getFullYear());
     }
-}
 
+    static updateShareURLView = () => {
+        if (lio.shareURLIsValid()) {
+            $("#shareURL").val(lio.updateShareURL());
+        } else {
+            $('#shareURL').val("[Too much data for URL encoding. Edit data or download instead.]")
+        }
+    };
 
-const populateShareURL = () => {
-    if (lio.shareURLIsValid()) {
-        $("#shareURL").val(lio.updateShareURL());
-    } else {
-        $('#shareURL').val("[Too much data for URL encoding. Edit data or download instead.]")
+    static updateLanguageOptionDisplay = () => {
+        $('#deckLanguagePromptsNotice').text(app.deck.languagePrompts);
+        $('#deckLanguageAnswerNotice').text(app.deck.languageAnswers);
     }
-};
+}
 
 const compileSaveData = () => {
     let data = {};
@@ -1172,91 +1207,6 @@ const copyShareURL = () => {
     copyToast = Copy.toast(copyToast, $("#shareURL").val(), 'Copied share URL!');
 };
 
-const createLanguageOptions = () => {
-    let select, option, optionValue, optionText;
-
-    for (let id of ["optLanguagePrompts", "optLanguageAnswers"]) {
-        select = $(`#${id}`);
-        select.empty();
-
-        option = `<option value="--">--</option>`;
-        select.append(option);
-
-        for (let lang of voiceLanguages) {
-            optionValue = lang[0];
-            optionText = lang[1];
-            option = `<option value="${optionValue}">${optionText}</option>`;
-            select.append(option);
-        }
-    }
-};
-
-const updateVoiceLanguages = () => {
-    if (typeof speechSynthesis === "undefined") {
-        return;
-    }
-
-    let niceName = "";
-    let languageToNiceName = {};
-    let languageSet = new Set();
-    let voices = speechSynthesis.getVoices();
-
-    for (let voice of voices) {
-        niceName = voice.lang;
-        if (niceName.includes(" - ")) {
-            niceName = niceName.split(" - ")[1];
-        }
-
-        languageToNiceName[voice.lang.toLowerCase()] = niceName;
-        languageSet.add(voice.lang.toLowerCase());
-
-    }
-
-    voiceLanguages = [];
-    for (let lang of languageSet) {
-        voiceLanguages.push([lang, languageToNiceName[lang]]);
-    }
-};
-
-const getVoiceOptions = (language) => {
-    if (typeof speechSynthesis === "undefined") {
-        return;
-    }
-
-    let voices = speechSynthesis.getVoices();
-    let voiceOptions = [];
-
-    for (let voice of voices) {
-        if (voice.lang.toLowerCase() === language) {
-            voiceOptions.push(voice);
-        }
-    }
-
-    return voiceOptions;
-};
-
-const createVoiceOptions = (select, language) => {
-    let option, optionValue, optionText;
-
-    let voices = getVoiceOptions(language);
-
-    select.empty();
-
-    if (voices.length === 0) {
-        option = `<option value="--">--</option>`;
-        select.append(option);
-    } else {
-        for (let voice of voices) {
-            optionValue = voice.name;
-            optionText = voice.name.split(" - ")[0];
-            option = `<option value="${optionValue}">${optionText}</option>`;
-            select.append(option);
-        }
-
-        select.val(voices[0].name).change();
-    }
-};
-
 const updateVoicePromptsOptions = () => {
     createVoiceOptions($("#optVoicePrompts"), $("#optLanguagePrompts").val());
 };
@@ -1266,44 +1216,14 @@ const updateVoiceAnswersOptions = () => {
 };
 
 const updateVoiceOptions = () => {
+
     return; // TODO
     updateVoiceLanguages();
     createLanguageOptions();
     updateVoicePromptsOptions();
-    setLanguageOptions();
     updateVoiceAnswersOptions();
+    setLanguageOptions();
 };
-
-const getClosestVoiceLanguage = (lang) => {
-    let ids = [];
-    let keys = {};
-    let id, key;
-
-    for (let tuple of voiceLanguages) {
-        id = tuple[0];
-        key = id.split('-')[0];
-        ids.push(tuple[0]);
-
-        if (!(key in keys)) {
-            keys[key] = [];
-        }
-        keys[key].push(id);
-    }
-
-    let langkey = lang.split('-')[0];
-
-    if (ids.includes(lang)) {
-        return lang;
-    } else {
-
-        // TODO Probably improve this by just mapping...
-        if (langkey in keys) {
-            return keys[langkey][0];
-        } else {
-            return '--';
-        }
-    }
-}
 
 const setLanguageOptions = () => {
     let _lp = getClosestVoiceLanguage(app.deck.languagePrompts);
@@ -1312,40 +1232,6 @@ const setLanguageOptions = () => {
     $("#optLanguagePrompts").val(_lp).change();
     $("#optLanguageAnswers").val(_la).change();
 }
-
-const makeUtterance = (text, voiceName, rate) => {
-
-    if (options.silentParentheses.value()) {
-        text = text.replace(/\(.*?\)/i, "");
-    }
-
-    if (options.silentAlternatives.value()) {
-        let re = /\/.*/i;
-        text = text.replace(re, "");
-    }
-
-    let utterance = new SpeechSynthesisUtterance(text);
-    for (let voice of speechSynthesis.getVoices()) {
-        if (voice.name === voiceName) {
-            utterance.voice = voice;
-            break;
-        }
-    }
-
-    utterance.pitch = 1;
-    utterance.rate = rate;
-    utterance.volume = options.volume.value() / 100;
-    return utterance;
-};
-
-const sayUtterance = (text, voiceName, rate) => {
-    if (voiceName === "--") {
-        return;
-    }
-
-    let utterance = makeUtterance(text, voiceName, rate);
-    speechSynthesis.speak(utterance);
-};
 
 const handleChangeInvertDictionary = () => {
 
@@ -1527,8 +1413,8 @@ const bindEditorControls = () => {
     $('#editSourceName').change(Editor.editMetaField);
     $('#editSourceURL').change(Editor.editMetaField);
 
-    $('#editLanguagePrompts').change(Editor.editLanguageField);
-    $('#editLanguageAnswers').change(Editor.editLanguageField);
+    $('#editLanguagePrompts').change(Editor.editLanguagePromptsField);
+    $('#editLanguageAnswers').change(Editor.editLanguageAnswersField);
 
     $('#editRaw').keyup(Editor.editRawField);
     $('#editRaw').change(Editor.editRawField);
@@ -1546,9 +1432,7 @@ const bind = () => {
     bindOptionsControls();
     bindEditorControls();
     bindUploadButton();
-
     $(document).keyup(handleKeyup);
-    speechSynthesis.onvoiceschanged = updateVoiceOptions;
 };
 
 /* Basics */
@@ -1572,6 +1456,7 @@ const addScenes = () => {
 // Initialize
 
 const initialize = () => {
+    Speech.wake();
     View.updateCopyrightView();
 
     stage = new _Stage();
@@ -1586,8 +1471,6 @@ const initialize = () => {
 
     bind();
     createDropzone();
-
-    updateVoiceOptions();
 
     lio.readURL();
 };
@@ -1635,4 +1518,5 @@ let lio = new LinkIO(
     }
 );
 
+Speech.wake();
 $(document).ready(initialize);

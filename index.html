@@ -126,13 +126,15 @@
                             <input type='checkbox' id='optSayPrompt'/>
                             <span class='checkmark'></span>
                             Read aloud on 'Next'</label>
-                        <!--            <div class='optLabelPlusOption'>-->
-                        <!--              <label for="optLanguagePrompts">-->
-                        <!--                <div class="optSideLabel">Voice language</div>-->
-                        <!--              </label>-->
-                        <!--              <select id="optLanguagePrompts"></select>-->
-                        <!--            </div>-->
 
+                        <label class="voiceLanguageNotice">The deck's prompt language is <span id="deckLanguagePromptsNotice">Canadian French</span>.<br>The options below are your browser's available voice languages.</label>
+
+                                    <div class='optLabelPlusOption'>
+                                      <label for="optLanguagePrompts">
+                                        <div class="optSideLabel">Voice language</div>
+                                      </label>
+                                      <select id="optLanguagePrompts"></select>
+                                    </div>
                         <div class='optLabelPlusOption'>
                             <label for="optVoicePrompts">
                                 <div class="optSideLabel">Voice</div>
@@ -175,12 +177,14 @@
                             <span class='checkmark'></span>
                             Read aloud on 'Reveal'</label>
 
-                        <!--            <div class='optLabelPlusOption'>-->
-                        <!--              <label for="optLanguageAnswers">-->
-                        <!--                <div class="optSideLabel">Voice language</div>-->
-                        <!--              </label>-->
-                        <!--              <select id="optLanguageAnswers"></select>-->
-                        <!--            </div>-->
+                        <label class="voiceLanguageNotice">The deck's answer language is <span id="deckLanguageAnswersNotice">English</span>.<br>The options below are your browser's available voice languages.</label>
+
+                                    <div class='optLabelPlusOption'>
+                                      <label for="optLanguageAnswers">
+                                        <div class="optSideLabel">Voice language</div>
+                                      </label>
+                                      <select id="optLanguageAnswers"></select>
+                                    </div>
 
                         <div class='optLabelPlusOption'>
                             <label for="optVoiceAnswers">
@@ -363,6 +367,7 @@
 <script src='https://g.sawczak.com/web-tools/js/upload-io.js'></script>
 <script src="https://g.sawczak.com/web-tools/js/link-io.js"></script>
 <script src='https://g.sawczak.com/web-tools/js/languages.js'></script>
+<script src='https://g.sawczak.com/web-tools/js/voices.js'></script>
 <script src="./script.js"></script>
 
 </body>
