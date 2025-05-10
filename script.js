@@ -1105,8 +1105,11 @@ class View {
     };
 
     static updateLanguageOptionDisplay = () => {
-        $('#deckLanguagePromptsNotice').text(app.deck.languagePrompts);
-        $('#deckLanguageAnswersNotice').text(app.deck.languageAnswers);
+        let lpName = Languages.getLanguageByCode(app.deck.languagePrompts).formatBilingualName();
+        let laName = Languages.getLanguageByCode(app.deck.languageAnswers).formatBilingualName();
+        
+        $('#deckLanguagePromptsNotice').text(lpName);
+        $('#deckLanguageAnswersNotice').text(laName);
     }
 }
 
