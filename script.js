@@ -74,7 +74,6 @@ class App {
         View.updateSourceView();
         View.updateCardView();
         View.updateShareURLView();
-
         View.updateControls();
     }
 }
@@ -746,27 +745,6 @@ class Receiver {
 }
 
 class Editor {
-    static populateLanguages = () => {
-        let select, option, optionValue, optionText;
-
-        for (let id of ["editLanguagePrompts", "editLanguageAnswers"]) {
-            select = $(`#${id}`);
-            select.empty();
-
-            option = `<option value="--">--</option>`;
-            select.append(option);
-
-            for (let lang of Languages) {
-                optionValue = lang['code'].toLowerCase();
-                optionText = lang['name'];
-                option = `<option value="${optionValue}">${optionText}</option>`;
-                select.append(option);
-            }
-        }
-
-        $('#editLanguagePrompts').val(app.deck.languagePrompts);
-        $('#editLanguageAnswers').val(app.deck.languageAnswers);
-    }
 
     static populateMeta = () => {
         $('#editTitle').val(app.deck.title);
@@ -838,6 +816,8 @@ class Editor {
         if (!args.skipRaw) {
             Editor.populateRaw();
         }
+
+        Editor.populateLanguages();
     }
 
     static editMetaField = () => {
@@ -943,31 +923,38 @@ class Editor {
         Editor.editItemField();
     }
 
+    static populateLanguages = () => {
+        $('#editLanguagePrompts').val(app.deck.languagePrompts);
+        $('#editLanguageAnswers').val(app.deck.languageAnswers);
+        View.updateLanguageOptionDisplay();
+        updateVoiceOptions($('#optLanguagePrompts'), $('#optVoicePrompts'), app.deck.languagePrompts);
+        updateVoiceOptions($('#optLanguageAnswers'), $('#optVoiceAnswers'), app.deck.languageAnswers);
+    }
+
     static editLanguagePromptsField = () => {
-        let newLP = $('#editLanguagePrompts').val();
+        let newL = $('#editLanguagePrompts').val();
 
         // If lang didn't change, return
-        if (newLP === app.deck.languagePrompts) {
+        if (newL === app.deck.languagePrompts) {
             return;
         }
 
-        app.deck.languagePrompts = newLP;
-        updateVoiceOptions($('#optLanguagePrompts'), $('#optVoicePrompts'), newLP);
-
+        app.deck.languagePrompts = newL;
+        updateVoiceOptions($('#optLanguagePrompts'), $('#optVoicePrompts'), newL);
         Editor.editLanguageField();
     }
 
     static editLanguageAnswersField = () => {
-        let newLP = $('#editLanguageAnswers').val();
+        let newL = $('#editLanguageAnswers').val();
+        console.log('editLA', newL, app.deck.languageAnswers, newL === app.deck.languageAnswers);
 
         // If lang didn't change, return
-        if (newLP === app.deck.languageAnswers) {
+        if (newL === app.deck.languageAnswers) {
             return;
         }
 
-        app.deck.languageAnswers = newLP;
-        updateVoiceOptions($('#optLanguageAnswers'), $('#optVoiceAnswers'), newLP);
-
+        app.deck.languageAnswers = newL;
+        updateVoiceOptions($('#optLanguageAnswers'), $('#optVoiceAnswers'), newL);
         Editor.editLanguageField();
     }
 
@@ -1119,7 +1106,7 @@ class View {
 
     static updateLanguageOptionDisplay = () => {
         $('#deckLanguagePromptsNotice').text(app.deck.languagePrompts);
-        $('#deckLanguageAnswerNotice').text(app.deck.languageAnswers);
+        $('#deckLanguageAnswersNotice').text(app.deck.languageAnswers);
     }
 }
 
@@ -1222,6 +1209,13 @@ const updateVoiceOptions = (selectLanguage, selectVoice, language) => {
     Speech.populateVoiceSelectForLanguage(selectVoice, closest); // auto-chooses first one
 }
 
+const createLanguageSelectOptions = () => {
+    Languages.populateLanguageSelect($('#editLanguagePrompts'), true, false);
+    Languages.populateLanguageSelect($('#editLanguageAnswers'), true, false);
+    Speech.populateVoiceLanguageSelect($('#optLanguagePrompts'), false, false);
+    Speech.populateVoiceLanguageSelect($('#optLanguageAnswers'), false, false);
+}
+
 const handleChangeInvertDictionary = () => {
 
     let vLP = $("#optLanguagePrompts").val();
@@ -1304,6 +1298,10 @@ const restart = () => {
     }
 }
 
+const reset = () => {
+    app.reset();
+}
+
 const handleKeyup = (e) => {
 
     // If we are escaping from a text entry field, don't hide the window... apparently
@@ -1329,12 +1327,12 @@ const handleKeyup = (e) => {
             restart();
             break;
 
-        case "KeyU":
-            $("#btnUpload").click();
+        case "KeyZ":
+            reset();
             break;
 
-        case "KeyZ":
-            $("#btnReset").click();
+        case "KeyU":
+            $("#btnUpload").click();
             break;
 
         case "KeyH":
@@ -1380,7 +1378,7 @@ const bindGameControls = () => {
     $("#btnPrevious").click(previous);
     $("#btnReveal").click(reveal);
     $("#btnRestart").click(restart);
-    $("#btnReset").click(app.reset);
+    $("#btnReset").click(reset);
 }
 
 const bindShareControls = () => {
@@ -1392,6 +1390,12 @@ const bindShareControls = () => {
 
 const bindOptionsControls = () => {
     $("#btnSetDefaultOptions").click(options.setDynamicOptionDefaults);
+    $('#optLanguagePrompts').change(() => {
+        Speech.populateVoiceSelectForLanguage($('#optVoicePrompts'), $('#optLanguagePrompts').val());
+    });
+    $('#optLanguageAnswers').change(() => {
+        Speech.populateVoiceSelectForLanguage($('#optVoiceAnswers'), $('#optLanguageAnswers').val());
+    });
 }
 
 const bindEditorControls = () => {
@@ -1447,20 +1451,21 @@ const addScenes = () => {
 const initialize = () => {
     Speech.wake();
     View.updateCopyrightView();
+    createDropzone();
 
     stage = new _Stage();
     addScenes();
     stage.show("game");
 
     app = new App();
-    options = new Options();
 
+    options = new Options();
     options.initialize();
-    app.setDefault();
 
     bind();
-    createDropzone();
+    createLanguageSelectOptions();
 
+    app.setDefault();
     lio.readURL();
 };
 
@@ -1478,8 +1483,8 @@ const defaultDeck = Deck.fromData({
     title: "French Test Deck",
     sourceName: "",
     sourceURL: "",
-    languagePrompts: "fr-ca",
-    languageAnswers: "en-us"
+    languagePrompts: "fr-CA",
+    languageAnswers: "en-US"
 });
 
 const optDefaultVolume = 100;
