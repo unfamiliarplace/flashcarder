@@ -1,195 +1,191 @@
 * {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
 }
 
 /* fixing jquery ui slider */
 
 .sliderContainer {
-  width: 248px;
-  background: #fff;
-  border-radius: 4px;
-  border: 1px solid #c5c5c5;
+    width: 248px;
+    background: #fff;
+    border-radius: 4px;
+    border: 1px solid #c5c5c5;
 }
 
 .ui-slider {
-  width: 208px;
-  border: none !important;
+    width: 208px;
+    border: none !important;
 }
 
 .ui-slider, .ui-slider .ui-slider-handle {
-  height: 28px;
+    height: 28px;
 }
 
 .ui-slider .ui-slider-handle {
-  margin-left: -1px;
-  top: -1px;
-  line-height: 26px;
-  width: 40px;
-  text-align: center;
-  background: #023b1f;
-  color: white;
+    margin-left: -1px;
+    top: -1px;
+    line-height: 26px;
+    width: 40px;
+    text-align: center;
+    background: #023b1f;
+    color: white;
 }
 
 .ui-slider .ui-slider-handle:hover {
-  background: #056e3a !important;
-  color: white !important;
+    background: #056e3a !important;
+    color: white !important;
 }
 
 .ui-slider .ui-slider-handle.ui-state-active {
-  background: #056e3a !important;
-  color: white !important;
-  border-color: #067e43 !important;
+    background: #056e3a !important;
+    color: white !important;
+    border-color: #067e43 !important;
 }
 
 /* done fixing jquery ui slider */
 
 body {
-    background: #0d1033;
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-  }
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
 
 #dropzoneContainer, #dropzone {
-  position: fixed;
-  display: none;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  z-index: 100;
+    position: fixed;
+    display: none;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 100;
 }
-  
-  #app {
-    position: relative;
+
+#app {
     background: #0d1033;
     color: #fff;
     font-family: 'Helvetica', 'Arial', sans-serif;
     margin: auto;
     box-sizing: border-box;
-    width: 100%;
+    width: 100vw;
     height: 100vh;
-    border-radius: 15px;
-    display: flex;
-    flex-direction: column;
-    justify-content: start;
-  }
+}
 
 .flexRow {
-  display: flex;
-  flex-direction: row;
-  justify-content: start;
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
 }
 
 .flexCol {
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
 }
-  
+
 #mainPanel {
-  position: relative;
-  box-sizing: border-box;
-  padding: 6px;
-  flex-grow: 1;
+    padding: 6px;
+    box-sizing: border-box;
+    flex-grow: 1;
 }
-  
-  #footer {
+
+#footer {
     color: #eee;
     width: 100%;
     font-size: 12px;
-    background: #080c1e;
-    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.35);
     padding: 6px;
+    box-sizing: border-box;
     flex-shrink: 0;
-  }
-
-#focusPanel {
-  margin-top: 75px;
+    z-index: 30;
 }
 
-  #title {
+#focusPanel {
+    margin-top: 75px;
+}
+
+#gamePanel {
+    overflow-y: scroll;
+}
+
+.titlePanel h1 {
     font-size: 30px;
     text-align: center;
     border-bottom: 1px solid #fff;
     padding-bottom: 15px;
-  }
-  
-  #prompt {
+}
+
+#prompt {
     font-size: 70px;
     font-family: "Times New Roman", "serif";
-  }
-  
-  #answer {
+}
+
+#answer {
     font-size: 60px;
     font-style: italic;
     font-family: "Times New Roman", "serif";
-  }
-  
-  a {
+}
+
+a {
     color: #0adcff;
-  }
-  
-  @media (max-width: 779px) {  
+}
+
+@media (max-width: 779px) {
     #title {
-      font-size: 20px;
+        font-size: 20px;
     }
-    
+
     #prompt {
-      font-size: 60px;
+        font-size: 60px;
     }
-   
+
     #answer {
-      font-size: 40px;
+        font-size: 40px;
     }
-    
+
     .control {
-      font-size: 15px;
+        font-size: 15px;
     }
-  }
-  
-  #prompt, #answer {
+}
+
+#prompt, #answer {
     text-align: center;
     margin: 2vw 0 4vw 0;
     height: 12vh;
     display: block;
-  }
-  
-  #info {
+}
+
+#info {
     margin-top: 20px;
     text-align: center;
-  }
-  
-  #infoCount, #infoDenom {
+}
+
+#infoCount, #infoDenom {
     display: inline-block;
     font-family: 'Courier New', monospace;
-  }
-  
-  #infoCount {
+}
+
+#infoCount {
     text-align: right;
     width: 35px;
-  }
-  
-  #infoDenom {
+}
+
+#infoDenom {
     text-align: left;
-  }
-  
-  #controls {
+}
+
+#controls {
     border-top: 1px solid #fff;
     display: flex;
     flex-direction: row;
     justify-content: center;
     max-height: 60vh;
-  /*   border: 1px solid #fff; */
     border-radius: 5px;
-    padding: 10px;
-    padding-top: 20px;
+    padding: 20px 10px 10px;
     margin: auto;
-  }
-  
-  .control {
+}
+
+.control {
     display: inline-block;
     height: 70px;
     width: auto;
@@ -200,444 +196,436 @@ body {
     font-size: 20px;
     font-weight: normal;
     padding: 10px;
-  }
+}
 
 .buttonBase {
-  background: none;
-  border: 1px solid #fff;
-  border-radius: 5px;
-  color: #fff;
-  min-height: 30px;
-  cursor: pointer;
+    background: none;
+    border: 1px solid #fff;
+    border-radius: 5px;
+    color: #fff;
+    min-height: 30px;
+    cursor: pointer;
 }
 
 .buttonBase.buttonDark {
-  color: #222;
-  border-color: #222;
+    color: #222;
+    border-color: #222;
 }
 
-
-  .buttonEffects:hover {
+.buttonEffects:hover {
     background: #fff !important;
     color: #111 !important;
-  }
+}
 
-  .buttonEffects:active {
+.buttonEffects:active {
     background: #aaa !important;
     color: #111 !important;
-  }
+}
 
 .buttonEffects.buttonDark:hover {
-  background: #222 !important;
-  color: #fff !important;
+    background: #222 !important;
+    color: #fff !important;
 }
 
 .buttonEffects.buttonDark:active {
-  background: #555 !important;
-  color: #fff !important;
+    background: #555 !important;
+    color: #fff !important;
 }
 
-  .buttonEffects:disabled {
+.buttonEffects:disabled {
     color: #ddd !important;
     border: 1px solid #ddd !important;
     cursor: default !important;
     filter: brightness(0.65) !important;
-  }
-  
-  .buttonEffects:disabled:hover, .buttonEffects:disabled:active {
+}
+
+.buttonEffects:disabled:hover, .buttonEffects:disabled:active {
     background: none !important;
     color: #ddd !important;
-  }
-  
-  #footerContent {
+}
+
+#footerContent {
     padding: 15px 10px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     box-sizing: border-box;
-  }
-  
-  .footerBlock {
+}
+
+.footerBlock {
     display: flex;
     flex-direction: row;
     justify-content: end;
-  }
-  
-  .footerBlock > div {  
+}
+
+.footerBlock > div {
     display: flex;
     flex-direction: column;
     justify-content: center;
     height: 20px;
-  }
-  
-  /* me again */
-  .hide {
+}
+
+/* me again */
+.hide {
     visibility: hidden;
     display: none;
-  }
-  
-  .buttonFooter {
+}
+
+.buttonFooter {
     padding: 5px 10px;
     margin-right: 10px;
-  }
+}
 
-  
-  #sourceContainer {
+
+#sourceContainer {
     margin-right: 15px;
-  }
-  
-  #nextMessage {
+}
+
+#nextMessage {
     font-style: italic;
     font-size: 18px;
     display: block;
     position: relative;
     top: 100%;
-  }
+}
 
 /* Scrollbar */
 
 .hideScrollbar {
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
 }
 
 .hideScrollbar::-webkit-scrollbar {
-  display: none;  /* Safari and Chrome */
+    display: none; /* Safari and Chrome */
 }
 
 /* All share stuff */
 
 #shareContent {
-  gap: 10px;
-  padding: 10px 0;
-  box-sizing: border-box;
+    gap: 10px;
+    padding: 10px 0;
+    box-sizing: border-box;
 }
 
 #shareURLLabel {
-  position: relative;
-  height: 30px;
-  line-height: 40px;
-  font-size: 14px;
+    position: relative;
+    height: 30px;
+    line-height: 40px;
+    font-size: 14px;
 }
 
 #shareURL {
-  width: 30%;
-  overflow-x: scroll;
-  height: 30px;
+    width: 30%;
+    overflow-x: scroll;
+    height: 30px;
 }
 
 #shareContent button {
-  height: 35px;
-  padding: 0 10px;
+    height: 35px;
+    padding: 0 10px;
 }
 
 .flexRowCenter {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;  
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
-  
+
 .fullPanel {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 20;
-  color: #fff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: #fff;
 }
 
 .overlayPanel {
-  background: #080c1e;  
+    background: #080c1e;
 }
 
 .verticalPanel {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;  
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
 
 .horizontalPanel {
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
 }
 
 .panelContent {
-  width: 95%;
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
-  text-align: center;  
+    width: 95%;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    text-align: center;
 }
 
-#titlePanel {
-  margin-top: 30px;
+.titlePanel {
+    margin-top: 20px;
 }
 
-.fullPanel h1, #titlePanel h1 {
-  font-size: 40px;
+.fullPanel h1, .titlePanel h1 {
+    font-size: 40px;
 }
 
 #helpContent p {
-  font-size: 1.2em;
+    font-size: 1.2em;
 }
 
 .textDark {
-  color: #222;
+    color: #222;
 }
 
 .textDark a {
-  color: #0d1033;
+    color: #0d1033;
 }
 
 hr {
-  width: 100%;
-  border-bottom: 1px solid white;
+    width: 100%;
+    border-bottom: 1px solid white;
 }
 
 .optionsRow {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  margin: 20px 0;
+    justify-content: space-between;
+    margin: 20px 0;
 }
 
 .optionsCol {
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
-  flex-grow: 1;
-  flex-shrink: 1;
-  margin: 0 15px;
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin: 0 15px;
 }
 
 .optionsCol label {
-  margin-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .cardPanel {
-  position: relative;
+    position: relative;
 }
 
 .hider {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  z-index: 11;
-  background: #0d1033;
-  line-height: 80px;
-  font-style: italic;
-  font-size: 21px;
-  margin: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    z-index: 2;
+    background: #0d1033;
+    line-height: 80px;
+    font-style: italic;
+    font-size: 21px;
+    margin: 0;
 }
 
 #promptHider, #answerHider {
-  font-size: 40px;
-  font-family: "Times New Roman", serif;
+    font-size: 40px;
+    font-family: "Times New Roman", serif;
 }
 
 #focusPanel {
-  position: relative;
+    position: relative;
 }
 
 #toBeginPanel {
-  font-size: 18px;
-  z-index: 12;
+    font-size: 18px;
+    z-index: 3;
 }
 
 #toBeginPanel h2 {
-  margin: 80px 0 0;
+    margin: 80px 0 0;
 }
 
 .ui-checkboxradio-label {
-  background: #eee;
-  color: #111;
+    background: #eee;
+    color: #111;
 }
 
 .ui-checkboxradio-label .ui-checkboxradio-icon {
-  border: 1px solid #aaa;
+    border: 1px solid #aaa;
 }
 
 .ui-checkboxradio-label.ui-checkboxradio-checked {
-  background: #023b1f;
-  border-color: #067e43;
-  color: white;
+    background: #023b1f;
+    border-color: #067e43;
+    color: white;
 }
 
 .ui-checkboxradio-label:hover {
-  background: #ccc !important;
-  color: #222 !important;
-  border-color: #067e43 !important;
+    background: #ccc !important;
+    color: #222 !important;
+    border-color: #067e43 !important;
 }
 
 .ui-checkboxradio-label.ui-checkboxradio-checked:hover {
-  background: #143023 !important;
-  color: #fff !important;
-  
+    background: #143023 !important;
+    color: #fff !important;
+
 }
 
 #optionsPanel h2 {
-  margin-top: -10px;
+    margin-top: -10px;
 }
 
 #optionsPanel .sample {
-  margin-bottom: 10px;
+    margin-bottom: 10px;
 }
 
 #optionsPanel select {
-  height: 30px;
+    height: 30px;
 }
 
 #optionsPanel select {
-  text-align: center;
- text-align-last: center;
+    text-align: center;
+    text-align-last: center;
 }
 
 #btnSetDefaultOptions {
-  width: 15%;
-  margin: auto;
-  height: 40px;
-  font-size: 15px;
+    width: 15%;
+    margin: auto;
+    height: 40px;
+    font-size: 15px;
 }
 
 .optLabelPlusOption {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  margin-bottom: 15px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 15px;
 }
 
-.optLabelPlusOption label  {
-  flex-grow: 20;
-  margin-bottom: 0;
-  text-align: left;
-  position: relative;
-  top: 20%;
+.optLabelPlusOption label {
+    flex-grow: 20;
+    margin-bottom: 0;
+    text-align: left;
+    position: relative;
+    top: 20%;
 }
 
 .optLabelPlusOption select {
-  margin-top: 0;
-  flex-grow: 80;
-  max-width: 250px;
+    margin-top: 0;
+    flex-grow: 80;
+    max-width: 250px;
 }
 
 .optLabelPlusOption .ui-slider, .optLabelPlusOption select {
-  flex-grow: 80;
+    flex-grow: 80;
 }
 
-.optLabelPlusOption label, .optLabelPlusOption label div {  
-  word-wrap: normal;
+.optLabelPlusOption label, .optLabelPlusOption label div {
+    word-wrap: normal;
 }
 
 #labelVolume {
-  flex-grow: 5;
+    flex-grow: 5;
 }
 
 input[disabled=""] {
-  background: #cccccc;
-  color: #222222;
-  font-style: italic;
+    background: #cccccc;
+    color: #222222;
+    font-style: italic;
 }
 
 /* Editor */
 
-#editPanel {
-/*   background: #111; */
-}
-
 #editorContent {
-  text-align: center;
-  width: 95%;
+    text-align: center;
+    width: 95%;
 }
 
 #editSubPanel {
-  gap: 3.3%;
+    gap: 3.3%;
 }
 
 #editSubPanel > div {
-  width: 30%;
-/*   border: 1px solid #eee; */
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-#editItemsList {  
-  max-height: 40vh;
-  overflow-y: scroll;
-}
-
-.editMetaItem label {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  margin: 5px 0;
-}
-
-.editMetaItemLabel {
-  width: 30%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: right;
-}
-
-.editMetaItem input {
-  width: 63%;
-  height: 30px;
-}
-
-.editMetaItem select, .editMetaItem option {
-  width: 65%;
-  height: 30px;
-}
-
-
-#editRaw {
-  width: 100%;
-  height: 40vh;
-  resize: none;
+    width: 30%;
+    /*   border: 1px solid #eee; */
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 #editItemsList {
-  gap: 10px;
+    max-height: 40vh;
+    overflow-y: scroll;
+}
+
+.editMetaItem label {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 5px 0;
+}
+
+.editMetaItemLabel {
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: right;
+}
+
+.editMetaItem input {
+    width: 63%;
+    height: 30px;
+}
+
+.editMetaItem select, .editMetaItem option {
+    width: 65%;
+    height: 30px;
+}
+
+#editRaw {
+    width: 100%;
+    height: 40vh;
+    resize: none;
+}
+
+#editItemsList {
+    gap: 10px;
 }
 
 .editItem input {
-  width: 40%;
+    width: 40%;
 }
 
 .editItem {
-  justify-content: space-between;
+    justify-content: space-between;
 }
 
 #editItem-Add {
-  flex-direction: row-reverse;
+    flex-direction: row-reverse;
 }
 
 .btnEditDeleteItem, .btnEditAddItem {
-  width: 30px;
+    width: 30px;
 }
 
-.editSectionHeading {
-  margin-bottom: 10px;
+.editColumn h2 {
+    margin-bottom: 20px;
 }
 
-.editClearButton .fa {
-  margin-right: 5px;
+.editSectionButtons button .fa {
+    margin-right: 5px;
+}
+
+.editSectionButtons button {
+    padding: 8px 10px;
 }
 
 #editUniversalControlPanel .editSectionButtons {
-  justify-content: center;
-  gap: 10px;
+    justify-content: center;
+    gap: 10px;
 }
 
 #editContent {
-  margin-top: 10px;
+    margin-top: 10px;
 }

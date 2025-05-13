@@ -16,12 +16,12 @@
 </head>
 <body>
 <!-- partial:index.partial.html -->
-<div id='app'>
+<div id='app' class='flexCol'>
     <div id='dropzoneContainer'></div>
     <div id='mainPanel'>
-        <div id='gamePanel' class='fullPanel'>
-            <div id='titlePanel'>
-                <h1 id='title'>French Test Deck</h1>
+        <div id='gamePanel' class='fullPanel hideScrollbar'>
+            <div class='titlePanel'>
+                <h1 id='gameTitle'>French Test Deck</h1>
             </div>
             <div id='focusPanel'>
                 <div id='toBeginPanel' class='hider'>
@@ -59,8 +59,9 @@
         </div>
         <div id="helpPanel" class="hide fullPanel verticalPanel overlayPanel">
             <div id="helpContent" class="panelContent">
-                <h1>Help</h1>
-                <hr/>
+                <div class='titlePanel'>
+                    <h1 id='helpTitle'>Help</h1>
+                </div>
                 <p><strong>Flashcarder</strong> is an app that allows you to upload custom "decks" of flashcards with
                     words and definitions.</p>
                 <p>To upload a deck, click "Upload" or drag and drop a file.</p>
@@ -88,17 +89,18 @@
         <div id="optionsPanel" class="hide fullPanel verticalPanel overlayPanel">
 
             <div id="optionsContent" class="panelContent">
-                <h1>Options</h1>
-                <div class='optionsRow'>
-                    <div class='optionsCol fullWidth'>
+                <div class='titlePanel'>
+                    <h1 id='optionsTitle'>Options</h1>
+                </div>                <div class='optionsRow flexRow'>
+                    <div class='optionsCol flexCol fullWidth'>
                         <button id='btnSetDefaultOptions' title='Reset options to defaults. Hotkey D'
                                 class='control buttonBase buttonEffects'>Defaults [D]
                         </button>
                     </div>
 
                 </div>
-                <div class='optionsRow'>
-                    <div class='optionsCol' id='optionsColPrompts'>
+                <div class='optionsRow flexRow'>
+                    <div class='optionsCol flexCol' id='optionsColPrompts'>
 
                         <h2>Prompts</h2>
                         <div class='sample' id='samplePrompt'>[sample prompt]</div>
@@ -149,7 +151,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class='optionsCol' id='optionsColAnswers'>
+                    <div class='optionsCol flexCol' id='optionsColAnswers'>
                         <h2>Answers</h2>
                         <div class='sample' id='sampleAnswer'>[sample answer]</div>
 
@@ -200,7 +202,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class='optionsCol fullWidth' id='optionsColGeneral'>
+                    <div class='optionsCol flexCol fullWidth' id='optionsColGeneral'>
                         <h2>General</h2>
                         <div class='sample'></div>&nbsp;
                         <div class='optLabelPlusOption'>
@@ -233,8 +235,9 @@
         </div>
         <div id="editPanel" class="hide fullPanel horizontalPanel overlayPanel">
             <div id='editOverall' class='panelContent'>
-                <h1>Share & Edit</h1>
-                <hr/>
+                <div class='titlePanel'>
+                    <h1 id='editorTitle'>Share & Edit</h1>
+                </div>
                 <div id="shareWrap" class="subpanelContent flexCol">
                     <div id='shareContent' class='flexRowCenter'>
                         <div id='shareURLLabel'>URL</div>
@@ -274,7 +277,7 @@
                         </div>
                     </div>
                     <div class='flexRow' id='editSubPanel'>
-                        <div id='editMetaPanel' class='flexCol'>
+                        <div id='editMetaPanel' class='editColumn flexCol'>
                             <h2>Meta</h2>
                             <div class='editMetaItem'>
                                 <label for='editTitle'>
@@ -307,11 +310,11 @@
                                 </label>
                             </div>
                         </div>
-                        <div id='editItemsPanel'>
+                        <div id='editItemsPanel' class="editColumn">
                             <h2 id='editItemsHeading'>Items</h2>
                             <div id='editItemsList' class='flexCol hideScrollbar'></div>
                         </div>
-                        <div id='editRawPanel'>
+                        <div id='editRawPanel' class="editColumn">
                             <h2>Raw Items</h2>
                             <textarea id='editRaw'></textarea>
                         </div>

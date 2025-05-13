@@ -70,7 +70,7 @@ class App {
     }
 
     handleGeneralChange = () => {
-        $("#title").text(app.deck.title);
+        $("#gameTitle").text(app.deck.title);
         View.updateSourceView();
         View.updateCardView();
         View.updateShareURLView();
