@@ -69,6 +69,7 @@ body {
     box-sizing: border-box;
     width: 100vw;
     height: 100vh;
+    gap: 20px;
 }
 
 .flexRow {
@@ -77,13 +78,25 @@ body {
     justify-content: start;
 }
 
+.flexRowCenter {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
 .flexCol {
     display: flex;
     flex-direction: column;
     justify-content: start;
 }
 
-#mainPanel {
+.flexColCenter {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#main {
     padding: 6px;
     box-sizing: border-box;
     flex-grow: 1;
@@ -100,15 +113,13 @@ body {
     z-index: 30;
 }
 
-#focusPanel {
-    margin-top: 75px;
-}
-
-#gamePanel {
+.panel {
     overflow-y: scroll;
+    height: 100%;
+    width: 100%;
 }
 
-.titlePanel h1 {
+#header h1 {
     font-size: 30px;
     text-align: center;
     border-bottom: 1px solid #fff;
@@ -180,9 +191,8 @@ a {
     flex-direction: row;
     justify-content: center;
     max-height: 60vh;
-    border-radius: 5px;
     padding: 20px 10px 10px;
-    margin: auto;
+    /*margin: auto;*/
 }
 
 .control {
@@ -276,7 +286,6 @@ a {
     margin-right: 10px;
 }
 
-
 #sourceContainer {
     margin-right: 15px;
 }
@@ -326,51 +335,19 @@ a {
     padding: 0 10px;
 }
 
-.flexRowCenter {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
+/* misc again */
 
-.fullPanel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    color: #fff;
-}
-
-.overlayPanel {
-    background: #080c1e;
-}
-
-.verticalPanel {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-.horizontalPanel {
-    display: flex;
-    flex-direction: column;
-    justify-content: start;
-}
-
-.panelContent {
-    width: 95%;
-    display: flex;
-    flex-direction: column;
-    justify-content: start;
-    text-align: center;
-}
-
-.titlePanel {
+#header {
     margin-top: 20px;
 }
 
-.fullPanel h1, .titlePanel h1 {
+#header h1 {
     font-size: 40px;
+}
+
+.subtitlePanel {
+    text-align: center;
+    padding: 10px 0;
 }
 
 #helpContent p {
@@ -470,10 +447,6 @@ hr {
     background: #143023 !important;
     color: #fff !important;
 
-}
-
-#optionsPanel h2 {
-    margin-top: -10px;
 }
 
 #optionsPanel .sample {
@@ -626,6 +599,6 @@ input[disabled=""] {
     gap: 10px;
 }
 
-#editContent {
+#editWrap {
     margin-top: 10px;
 }
