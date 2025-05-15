@@ -1446,9 +1446,9 @@ const setupStage = () => {
     stage = new Stage();
     stage.createScenes([
         {'name': 'game', 'panelSelector': '#gamePanel'},
-        {'name': 'edit', 'panelSelector': '#editPanel', 'toggleSelector': 'btnEdit'},
-        {'name': 'options', 'panelSelector': '#optionsPanel', 'toggleSelector': 'btnOptions'},
-        {'name': 'help', 'panelSelector': '#helpPanel', 'toggleSelector': 'btnHelp'}
+        {'name': 'edit', 'panelSelector': '#editPanel', 'toggleSelector': '#btnEdit'},
+        {'name': 'options', 'panelSelector': '#optionsPanel', 'toggleSelector': '#btnOptions'},
+        {'name': 'help', 'panelSelector': '#helpPanel', 'toggleSelector': '#btnHelp'}
     ]);
 
     stage.setDefault("game");
