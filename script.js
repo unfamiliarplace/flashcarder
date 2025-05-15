@@ -105,7 +105,7 @@ class Deck {
     }
 
     invert = () => {
-        this.dictionary = Tools.swapObjectKeys(this.dictionary);
+        this.dictionary = JSTools.swapObjectKeys(this.dictionary);
         return this;
     }
 
@@ -153,7 +153,7 @@ class Playthrough {
         }
 
         if (options.randomizeOrder.value()) {
-            this.order = Tools.shuffle(this.order);
+            this.order = Random.shuffle(this.order);
         }
     }
 
@@ -1167,7 +1167,7 @@ const packLinkData = () => {
         data.sourceURL = url;
     }
 
-    Tools.renameObjectKeys(data, {
+    JSTools.renameObjectKeys(data, {
         dictionary: "d",
         title: "t",
         sourceName: "s",
@@ -1180,7 +1180,7 @@ const packLinkData = () => {
 }
 
 const unpackLinkData = (data) => {
-    Tools.renameObjectKeys(data, {
+    JSTools.renameObjectKeys(data, {
         d: "dictionary",
         t: "title",
         s: "sourceName",
@@ -1442,20 +1442,17 @@ const bind = () => {
 
 /* Basics */
 
-const addScenes = () => {
-    stage.addScene(
-        new _Scene("game", "#gamePanel", "", [$("#gamePanel button")])
-    );
-    stage.addScene(new _Scene("edit", "#editPanel", "#btnEdit", []));
-    stage.addScene(
-        new _Scene("options", "#optionsPanel", "#btnOptions", [
-            $("#optionsPanel button"),
-            $("#optionsPanel input")
-        ])
-    );
-    stage.addScene(new _Scene("help", "#helpPanel", "#btnHelp", []));
+const setupStage = () => {
+    stage = new Stage();
+    stage.createScenes([
+        {'name': 'game', 'panelSelector': '#gamePanel'},
+        {'name': 'edit', 'panelSelector': '#editPanel', 'toggleSelector': 'btnEdit'},
+        {'name': 'options', 'panelSelector': '#optionsPanel', 'toggleSelector': 'btnOptions'},
+        {'name': 'help', 'panelSelector': '#helpPanel', 'toggleSelector': 'btnHelp'}
+    ]);
 
     stage.setDefault("game");
+    stage.show("game");
 };
 
 // Initialize
@@ -1465,9 +1462,7 @@ const initialize = () => {
     View.updateCopyrightView();
     createDropzone();
 
-    stage = new _Stage();
-    addScenes();
-    stage.show("game");
+    setupStage();
 
     app = new App();
 
