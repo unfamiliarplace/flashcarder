@@ -429,7 +429,7 @@ class Parser {
                 data.sourceURL = lastPiece;
             } else if (["_languageprompts", "_lngp"].includes(firstPieceLower)) {
                 data.languagePrompts = lastPiece.toLowerCase();
-            } else if (["_languageAnswers", "_lnga"].includes(firstPieceLower)) {
+            } else if (["_languageanswers", "_lnga"].includes(firstPieceLower)) {
                 data.languageAnswers = lastPiece.toLowerCase();
             } else {
                 data.dictionary[firstPiece] = lastPiece;
@@ -600,7 +600,7 @@ class Downloader {
 
         for (let k of [
             "title",
-            "source",
+            "sourceName",
             "sourceURL",
             "languagePrompts",
             "languageAnswers"
@@ -621,7 +621,7 @@ class Downloader {
 
         for (let k of [
             "title",
-            "source",
+            "sourceName",
             "sourceURL",
             "languagePrompts",
             "languageAnswers"
@@ -801,7 +801,7 @@ class Editor {
 
         for (let key of Object.keys(app.deck.dictionary)) {
             val = app.deck.dictionary[key];
-            raw += `${key}\t${val}\n`;
+            raw += `${key}${rawDelimiter}${val}\n`;
         }
 
         $('#editRaw').val(raw.trim());
@@ -1287,25 +1287,25 @@ const createDropzone = () => {
 // Needed because app.playthrough's definition changes over time so it needs to be decoupled
 
 const next = () => {
-    if (app.playthrough.canNext()) {
+    if (stage.active === 'game' && app.playthrough.canNext()) {
         app.playthrough.next();
     }
 }
 
 const previous = () => {
-    if (app.playthrough.canPrevious()) {
+    if (stage.active === 'game' &&app.playthrough.canPrevious()) {
         app.playthrough.previous();
     }
 }
 
 const reveal = () => {
-    if (app.playthrough.canReveal()) {
+    if (stage.active === 'game' &&app.playthrough.canReveal()) {
         app.playthrough.reveal();
     }
 }
 
 const restart = () => {
-    if (app.playthrough.canRestart()) {
+    if (stage.active === 'game' &&app.playthrough.canRestart()) {
         app.playthrough.restart();
     }
 }
@@ -1480,6 +1480,7 @@ const initialize = () => {
 
 const baseURL = "https://g.sawczak.com/flashcarder";
 const defaultCSVDelimiter = ",";
+const rawDelimiter = ";";
 
 const defaultDeck = Deck.fromData({
     dictionary: {

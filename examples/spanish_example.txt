@@ -1,0 +1,9 @@
+_title	Spanish Example Deck
+_sourceName	Lirica on Youtube
+_sourceURL	https://www.youtube.com/watch?v=Xo5Y7AHMy20
+_languagePrompts	es
+_languageAnswers	en
+
+decir	to say
+ser	to be
+tener	to have
