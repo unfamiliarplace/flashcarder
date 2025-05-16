@@ -4,51 +4,8 @@
     box-sizing: border-box;
 }
 
-/* fixing jquery ui slider */
-
-.sliderContainer {
-    width: 248px;
-    background: #fff;
-    border-radius: 4px;
-    border: 1px solid #c5c5c5;
-}
-
-.ui-slider {
-    width: 208px;
-    border: none !important;
-}
-
-.ui-slider, .ui-slider .ui-slider-handle {
-    height: 28px;
-}
-
-.ui-slider .ui-slider-handle {
-    margin-left: -1px;
-    top: -1px;
-    line-height: 26px;
-    width: 40px;
-    text-align: center;
-    background: #023b1f;
-    color: white;
-}
-
-.ui-slider .ui-slider-handle:hover {
-    background: #056e3a !important;
-    color: white !important;
-}
-
-.ui-slider .ui-slider-handle.ui-state-active {
-    background: #056e3a !important;
-    color: white !important;
-    border-color: #067e43 !important;
-}
-
-/* done fixing jquery ui slider */
-
 body {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
+   --bg-color: #0d1033;
 }
 
 #dropzoneContainer, #dropzone {
@@ -62,7 +19,7 @@ body {
 }
 
 #app {
-    background: #0d1033;
+    background: var(--bg-color);
     color: #fff;
     font-family: 'Helvetica', 'Arial', sans-serif;
     margin: auto;
@@ -71,6 +28,8 @@ body {
     height: 100vh;
     gap: 20px;
 }
+
+/* basics */
 
 .flexRow {
     display: flex;
@@ -111,6 +70,7 @@ body {
     box-sizing: border-box;
     flex-shrink: 0;
     z-index: 30;
+    border-top: 1px solid #fff;
 }
 
 .panel {
@@ -126,8 +86,68 @@ body {
     padding-bottom: 15px;
 }
 
+a {
+    color: #0adcff;
+}
+
+#footerContent {
+    padding: 15px 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.footerBlock {
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+}
+
+.footerBlock > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 20px;
+}
+
+/* me again */
+.hide {
+    visibility: hidden;
+    display: none;
+}
+
+.buttonFooter {
+    padding: 5px 10px;
+    margin-right: 10px;
+}
+
+/*@media (max-width: 779px) {*/
+/*    #title {*/
+/*        font-size: 20px;*/
+/*    }*/
+
+/*    #prompt {*/
+/*        font-size: 60px;*/
+/*    }*/
+
+/*    #answer {*/
+/*        font-size: 40px;*/
+/*    }*/
+
+/*    .control {*/
+/*        font-size: 15px;*/
+/*    }*/
+/*}*/
+
+/* Particulars */
+
+.card {
+    text-align: center;
+}
+
 #prompt {
-    font-size: 70px;
+    font-size: 60px;
     font-family: "Times New Roman", "serif";
 }
 
@@ -137,33 +157,13 @@ body {
     font-family: "Times New Roman", "serif";
 }
 
-a {
-    color: #0adcff;
+.cardPanel {
+    height: 45%;
 }
 
-@media (max-width: 779px) {
-    #title {
-        font-size: 20px;
-    }
-
-    #prompt {
-        font-size: 60px;
-    }
-
-    #answer {
-        font-size: 40px;
-    }
-
-    .control {
-        font-size: 15px;
-    }
-}
-
-#prompt, #answer {
+.card {
     text-align: center;
-    margin: 2vw 0 4vw 0;
-    height: 12vh;
-    display: block;
+    /*margin: 2vw 0 4vw 0;*/
 }
 
 #info {
@@ -192,7 +192,8 @@ a {
     justify-content: center;
     max-height: 60vh;
     padding: 20px 10px 10px;
-    /*margin: auto;*/
+    margin: 0px auto;
+    width: 50%;
 }
 
 .control {
@@ -207,6 +208,8 @@ a {
     font-weight: normal;
     padding: 10px;
 }
+
+/* Button base */
 
 .buttonBase {
     background: none;
@@ -252,38 +255,6 @@ a {
 .buttonEffects:disabled:hover, .buttonEffects:disabled:active {
     background: none !important;
     color: #ddd !important;
-}
-
-#footerContent {
-    padding: 15px 10px;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    box-sizing: border-box;
-}
-
-.footerBlock {
-    display: flex;
-    flex-direction: row;
-    justify-content: end;
-}
-
-.footerBlock > div {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 20px;
-}
-
-/* me again */
-.hide {
-    visibility: hidden;
-    display: none;
-}
-
-.buttonFooter {
-    padding: 5px 10px;
-    margin-right: 10px;
 }
 
 #sourceContainer {
@@ -362,7 +333,7 @@ a {
 }
 
 .textDark a {
-    color: #0d1033;
+    color: var(--bg-color);
 }
 
 hr {
@@ -402,45 +373,89 @@ hr {
     justify-content: center;
 }
 
-.cardPanel {
-    position: relative;
-}
+/*.hider {*/
+/*    position: absolute;*/
+/*    top: 0;*/
+/*    left: 0;*/
+/*    height: 100%;*/
+/*    width: 100%;*/
+/*    box-sizing: border-box;*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*    justify-content: center;*/
+/*    z-index: 2;*/
+/*    !*background: var(--bg-color);*!*/
+/*    line-height: 80px;*/
+/*    font-style: italic;*/
+/*    font-size: 21px;*/
+/*    margin: 0;*/
+/*}*/
 
-.hider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    z-index: 2;
-    background: #0d1033;
-    line-height: 80px;
-    font-style: italic;
-    font-size: 21px;
-    margin: 0;
+.swappable {
+    height: inherit;
+    width: inherit;
 }
 
 #promptHider, #answerHider {
-    font-size: 40px;
+    font-size: 60px;
     font-family: "Times New Roman", serif;
+    font-style: italic;
 }
 
 #focusPanel {
-    position: relative;
+    margin: 20px 0;
+    min-height: 500px;
 }
 
 #toBeginPanel {
-    font-size: 18px;
-    z-index: 3;
+    font-size: 22px;
 }
 
-#toBeginPanel h2 {
-    margin: 80px 0 0;
+#toBeginPanel, #begunPanel {
+    min-height: 500px;
+    justify-content: space-around;
 }
+
+/* fixing jquery ui slider */
+
+.sliderContainer {
+    width: 248px;
+    background: #fff;
+    border-radius: 4px;
+    border: 1px solid #c5c5c5;
+}
+
+.ui-slider {
+    width: 208px;
+    border: none !important;
+}
+
+.ui-slider, .ui-slider .ui-slider-handle {
+    height: 28px;
+}
+
+.ui-slider .ui-slider-handle {
+    margin-left: -1px;
+    top: -1px;
+    line-height: 26px;
+    width: 40px;
+    text-align: center;
+    background: #023b1f;
+    color: white;
+}
+
+.ui-slider .ui-slider-handle:hover {
+    background: #056e3a !important;
+    color: white !important;
+}
+
+.ui-slider .ui-slider-handle.ui-state-active {
+    background: #056e3a !important;
+    color: white !important;
+    border-color: #067e43 !important;
+}
+
+/* ui-checkboxradio */
 
 .ui-checkboxradio-label {
     background: #eee;
@@ -475,6 +490,8 @@ hr {
     border-color: #fff;
     background: #7c7c7c;
 }
+
+/* end ui-checkboxradio */
 
 #optionsPanel .sample {
     margin-bottom: 10px;

@@ -1089,8 +1089,10 @@ class View {
         View.toggleTextAnswerVisibility();
 
         $("#infoCount").text(app.playthrough.index + 1);
-        View.toggleVisibility($("#toBeginPanel"),
-            app.playthrough.state === PlaythroughState.InitializedButNotStarted);
+
+        let begun = app.playthrough.state !== PlaythroughState.InitializedButNotStarted;
+        View.toggleVisibility($("#toBeginPanel"), ! begun);
+        View.toggleVisibility($("#begunPanel"), begun);
     }
 
     static updateCopyrightView = () => {

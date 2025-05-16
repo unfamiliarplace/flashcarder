@@ -23,43 +23,45 @@
     </div>
     <div id='main'>
         <div id='gamePanel' class='panel flexCol hideScrollbar'>
-                <div class="subtitlePanel">
-                    <h2 id="deckTitle">French Test Deck</h2>
+            <div class="subtitlePanel">
+                <h2 id="deckTitle">French Test Deck</h2>
+            </div>
+            <div id='focusPanel'>
+                <div id='toBeginPanel' class='swappable flexCol flexColCenter'>
+                    <h3>[ NEXT to begin ]</h3>
                 </div>
-                <div id='focusPanel'>
-                    <div id='toBeginPanel' class='hider'>
-                        <h2>[ NEXT to begin ]</h2>
-                    </div>
+                <div id="begunPanel" class="swappable hide flexCol flexColCenter">
                     <div id="promptPanel" class='cardPanel'>
-                        <div id='prompt' class='card'></div>
-                        <div id='promptHider' class='hide hider'>?</div>
+                        <div id='prompt' class='swappable card flexCol flexColCenter'></div>
+                        <div id='promptHider' class='swappable hide card flexCol flexColCenter'>?</div>
                     </div>
                     <div id="answerPanel" class='cardPanel'>
-                        <div id='answer' class='card'></div>
-                        <div id='answerHider' class='hide hider'>?</div>
+                        <div id='answer' class='swappable hide card flexCol flexColCenter'></div>
+                        <div id='answerHider' class='swappable card flexCol flexColCenter'>?</div>
                     </div>
                 </div>
-                <div id='controls'>
-                    <button id='btnNext' class='control buttonBase buttonEffects' title='Show the next word. Hotkey N'>
-                        Next
-                        [N]
-                    </button>
-                    <button id='btnPrevious' class='control buttonBase buttonEffects'
-                            title='Show the previous word. Hotkey P'>Previous [P]
-                    </button>
-                    <button id='btnReveal' class='control buttonBase buttonEffects'
-                            title="Reveal this word's meaning. Hotkey R">Reveal [R]
-                    </button>
-                    <button id='btnRestart' class='control buttonBase buttonEffects'
-                            title="Restart the words shown. Hotkey X">Restart [X]
-                    </button>
-                </div>
-                <div id='info'>
-                    <div id='infoCount'>0</div>
-                    /
-                    <div id='infoDenom'>3</div>
-                    word(s) seen so far.
-                </div>
+            </div>
+            <div id='controls'>
+                <button id='btnNext' class='control buttonBase buttonEffects' title='Show the next word. Hotkey N'>
+                    Next
+                    [N]
+                </button>
+                <button id='btnPrevious' class='control buttonBase buttonEffects'
+                        title='Show the previous word. Hotkey P'>Previous [P]
+                </button>
+                <button id='btnReveal' class='control buttonBase buttonEffects'
+                        title="Reveal this word's meaning. Hotkey R">Reveal [R]
+                </button>
+                <button id='btnRestart' class='control buttonBase buttonEffects'
+                        title="Restart the words shown. Hotkey X">Restart [X]
+                </button>
+            </div>
+            <div id='info'>
+                <div id='infoCount'>0</div>
+                /
+                <div id='infoDenom'>3</div>
+                word(s) seen so far.
+            </div>
         </div>
         <div id="helpPanel" class="panel hide flexCol hideScrollbar">
             <div class="subtitlePanel">
