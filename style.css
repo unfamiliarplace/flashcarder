@@ -2,12 +2,13 @@
 
 body {
     --bg-color: #0d1033;
+    --text-color: #fff;
 }
 
 #app {
     font-family: 'Helvetica', 'Arial', sans-serif;
     background: var(--bg-color);
-    color: #fff;
+    color: var(--text-color);
 }
 
 #header h1 {
