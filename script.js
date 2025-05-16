@@ -1320,7 +1320,7 @@ const handleKeyup = (e) => {
 
     // If we are escaping from a text entry field, don't hide the window... apparently
     let tag = document.activeElement.tagName;
-    if (["input", "textarea"].includes(tag.toLowerCase()) && (e.code !== "Escape")) {
+    if (["input", "textarea", "select"].includes(tag.toLowerCase()) && (e.code !== "Escape")) {
         return;
     }
 

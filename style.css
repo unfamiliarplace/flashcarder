@@ -1,11 +1,13 @@
+/* General */
+
+body {
+    --bg-color: #0d1033;
+}
+
 * {
     padding: 0;
     margin: 0;
     box-sizing: border-box;
-}
-
-body {
-   --bg-color: #0d1033;
 }
 
 #dropzoneContainer, #dropzone {
@@ -90,6 +92,43 @@ a {
     color: #0adcff;
 }
 
+.hide {
+    visibility: hidden;
+    display: none;
+}
+
+.swappable {
+    height: inherit;
+    width: inherit;
+}
+
+#header {
+    padding-top: 20px;
+    background: rgba(0, 0, 0, .25);
+}
+
+#header h1 {
+    font-size: 40px;
+}
+
+.subtitlePanel {
+    text-align: center;
+    padding: 10px 0;
+}
+
+hr {
+    width: 100%;
+    border-bottom: 1px solid white;
+}
+
+.textDark {
+    color: #222;
+}
+
+.textDark a {
+    color: var(--bg-color);
+}
+
 #footerContent {
     padding: 15px 10px;
     display: flex;
@@ -111,102 +150,9 @@ a {
     height: 20px;
 }
 
-/* me again */
-.hide {
-    visibility: hidden;
-    display: none;
-}
-
 .buttonFooter {
     padding: 5px 10px;
     margin-right: 10px;
-}
-
-/*@media (max-width: 779px) {*/
-/*    #title {*/
-/*        font-size: 20px;*/
-/*    }*/
-
-/*    #prompt {*/
-/*        font-size: 60px;*/
-/*    }*/
-
-/*    #answer {*/
-/*        font-size: 40px;*/
-/*    }*/
-
-/*    .control {*/
-/*        font-size: 15px;*/
-/*    }*/
-/*}*/
-
-/* Particulars */
-
-.card {
-    text-align: center;
-}
-
-#prompt {
-    font-size: 60px;
-    font-family: "Times New Roman", "serif";
-}
-
-#answer {
-    font-size: 60px;
-    font-style: italic;
-    font-family: "Times New Roman", "serif";
-}
-
-.cardPanel {
-    height: 45%;
-}
-
-.card {
-    text-align: center;
-    /*margin: 2vw 0 4vw 0;*/
-}
-
-#info {
-    margin-top: 20px;
-    text-align: center;
-}
-
-#infoCount, #infoDenom {
-    display: inline-block;
-    font-family: 'Courier New', monospace;
-}
-
-#infoCount {
-    text-align: right;
-    width: 35px;
-}
-
-#infoDenom {
-    text-align: left;
-}
-
-#controls {
-    border-top: 1px solid #fff;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    max-height: 60vh;
-    padding: 20px 10px 10px;
-    margin: 0px auto;
-    width: 50%;
-}
-
-.control {
-    display: inline-block;
-    height: 70px;
-    width: auto;
-    min-width: 10vw;
-    margin: 10px;
-    border-radius: 7px;
-    box-shadow: 5px 5px #000;
-    font-size: 20px;
-    font-weight: normal;
-    padding: 10px;
 }
 
 /* Button base */
@@ -278,142 +224,6 @@ a {
 
 .hideScrollbar::-webkit-scrollbar {
     display: none; /* Safari and Chrome */
-}
-
-/* All share stuff */
-
-#shareContent {
-    gap: 10px;
-    padding: 10px 0;
-    box-sizing: border-box;
-}
-
-#shareURLLabel {
-    position: relative;
-    height: 30px;
-    line-height: 40px;
-    font-size: 14px;
-}
-
-#shareURL {
-    width: 30%;
-    overflow-x: scroll;
-    height: 30px;
-}
-
-#shareContent button {
-    height: 35px;
-    padding: 0 10px;
-}
-
-/* misc again */
-
-#header {
-    padding-top: 20px;
-    background: rgba(0, 0, 0, .25);
-}
-
-#header h1 {
-    font-size: 40px;
-}
-
-.subtitlePanel {
-    text-align: center;
-    padding: 10px 0;
-}
-
-#helpContent p {
-    font-size: 1.25em;
-    margin: 10px 150px;
-    text-align: center;
-}
-
-.textDark {
-    color: #222;
-}
-
-.textDark a {
-    color: var(--bg-color);
-}
-
-hr {
-    width: 100%;
-    border-bottom: 1px solid white;
-}
-
-.optionsRow {
-    justify-content: space-between;
-    margin: 20px 0;
-}
-
-.optionsCol {
-    /*flex-grow: 1;*/
-    /*flex-shrink: 1;*/
-    width: 31%;
-    margin: 0 15px;
-}
-
-.optionsCol label {
-    margin-bottom: 20px;
-}
-
-#optionsControls {
-    margin-top: 10px;
-    margin-bottom: 30px;
-}
-
-.fieldsetRadio {
-    margin-bottom: 20px;
-    padding-top: 15px;
-}
-
-.fieldsetRadioSub {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-/*.hider {*/
-/*    position: absolute;*/
-/*    top: 0;*/
-/*    left: 0;*/
-/*    height: 100%;*/
-/*    width: 100%;*/
-/*    box-sizing: border-box;*/
-/*    display: flex;*/
-/*    flex-direction: row;*/
-/*    justify-content: center;*/
-/*    z-index: 2;*/
-/*    !*background: var(--bg-color);*!*/
-/*    line-height: 80px;*/
-/*    font-style: italic;*/
-/*    font-size: 21px;*/
-/*    margin: 0;*/
-/*}*/
-
-.swappable {
-    height: inherit;
-    width: inherit;
-}
-
-#promptHider, #answerHider {
-    font-size: 60px;
-    font-family: "Times New Roman", serif;
-    font-style: italic;
-}
-
-#focusPanel {
-    margin: 20px 0;
-    min-height: 500px;
-}
-
-#toBeginPanel {
-    font-size: 22px;
-}
-
-#toBeginPanel, #begunPanel {
-    min-height: 500px;
-    justify-content: space-around;
 }
 
 /* fixing jquery ui slider */
@@ -491,7 +301,162 @@ hr {
     background: #7c7c7c;
 }
 
-/* end ui-checkboxradio */
+/* Particulars for this app */
+
+/* Game */
+
+.card {
+    text-align: center;
+}
+
+#prompt {
+    font-size: 60px;
+    font-family: "Times New Roman", "serif";
+}
+
+#answer {
+    font-size: 60px;
+    font-style: italic;
+    font-family: "Times New Roman", "serif";
+}
+
+.cardPanel {
+    height: 45%;
+}
+
+.card {
+    text-align: center;
+    /*margin: 2vw 0 4vw 0;*/
+}
+
+#info {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#infoCount, #infoDenom {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+}
+
+#infoCount {
+    text-align: right;
+    width: 35px;
+}
+
+#infoDenom {
+    text-align: left;
+}
+
+#controls {
+    border-top: 1px solid #fff;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    max-height: 60vh;
+    padding: 20px 10px 10px;
+    margin: 0px auto;
+    width: 50%;
+}
+
+.control {
+    display: inline-block;
+    height: 70px;
+    width: auto;
+    min-width: 10vw;
+    margin: 10px;
+    border-radius: 7px;
+    box-shadow: 5px 5px #000;
+    font-size: 20px;
+    font-weight: normal;
+    padding: 10px;
+}
+
+#promptHider, #answerHider {
+    font-size: 60px;
+    font-family: "Times New Roman", serif;
+    font-style: italic;
+}
+
+#focusPanel {
+    margin: 20px 0;
+    min-height: 500px;
+}
+
+#toBeginPanel {
+    font-size: 22px;
+}
+
+#toBeginPanel, #begunPanel {
+    min-height: 500px;
+    justify-content: space-around;
+}
+
+/* Share */
+
+#shareContent {
+    gap: 10px;
+    padding: 10px 0;
+    box-sizing: border-box;
+}
+
+#shareURLLabel {
+    position: relative;
+    height: 30px;
+    line-height: 40px;
+    font-size: 14px;
+}
+
+#shareURL {
+    width: 30%;
+    overflow-x: scroll;
+    height: 30px;
+}
+
+#shareContent button {
+    height: 35px;
+    padding: 0 10px;
+}
+
+/* Help */
+
+#helpContent p {
+    font-size: 1.25em;
+    margin: 10px 150px;
+    text-align: center;
+}
+
+/* Options */
+
+.optionsRow {
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.optionsCol {
+    width: 31%;
+    margin: 0 15px;
+}
+
+.optionsCol label {
+    margin-bottom: 20px;
+}
+
+#optionsControls {
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+.fieldsetRadio {
+    margin-bottom: 20px;
+    padding-top: 15px;
+}
+
+.fieldsetRadioSub {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
 
 #optionsPanel .sample {
     margin-bottom: 10px;
