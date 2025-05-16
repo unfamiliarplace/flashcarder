@@ -266,7 +266,7 @@ input[disabled=""] {
     box-sizing: border-box;
 }
 
-#editSubPanel input {
+#editPanel input {
     padding: 0px 5px;
 }
 
