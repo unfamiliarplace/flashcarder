@@ -376,13 +376,30 @@ hr {
 }
 
 .optionsCol {
-    flex-grow: 1;
-    flex-shrink: 1;
+    /*flex-grow: 1;*/
+    /*flex-shrink: 1;*/
+    width: 31%;
     margin: 0 15px;
 }
 
 .optionsCol label {
     margin-bottom: 20px;
+}
+
+#optionsControls {
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+.fieldsetRadio {
+    margin-bottom: 20px;
+    padding-top: 15px;
+}
+
+.fieldsetRadioSub {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
 
 .cardPanel {
@@ -449,7 +466,14 @@ hr {
 .ui-checkboxradio-label.ui-checkboxradio-checked:hover {
     background: #143023 !important;
     color: #fff !important;
+}
 
+.ui-checkboxradio-radio-label.ui-checkboxradio-checked .ui-icon, .ui-checkboxradio-radio-label.ui-checkboxradio-checked:hover .ui-icon {
+    width: 16px;
+    height: 16px;
+    /*border: none;*/
+    border-color: #fff;
+    background: #7c7c7c;
 }
 
 #optionsPanel .sample {
@@ -489,12 +513,12 @@ hr {
 
 .optLabelPlusOption select {
     margin-top: 0;
-    flex-grow: 80;
-    max-width: 250px;
+    /*flex-grow: 80;*/
+    width: 249px;
 }
 
 .optLabelPlusOption .ui-slider, .optLabelPlusOption select {
-    flex-grow: 80;
+    /*flex-grow: 80;*/
 }
 
 .optLabelPlusOption label, .optLabelPlusOption label div {
@@ -546,7 +570,7 @@ input[disabled=""] {
     overflow-y: scroll;
 }
 
-#editSubPanel h2 {
+h3, .sample, .voiceLanguageNotice {
     text-align: center;
 }
 

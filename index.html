@@ -61,7 +61,6 @@
                     word(s) seen so far.
                 </div>
         </div>
-
         <div id="helpPanel" class="panel hide flexCol hideScrollbar">
             <div class="subtitlePanel">
                 <h2>Help</h2>
@@ -93,8 +92,8 @@
                 <h2>Options</h2>
             </div>
             <div id="optionsContent" class="panelContent">
-                <div class='optionsRow flexRow'>
-                    <div class='optionsCol flexCol fullWidth'>
+                <div class='flexRow flexRowCenter' id="optionsControls">
+                    <div class='flexCol fullWidth'>
                         <button id='btnSetDefaultOptions' title='Reset options to defaults. Hotkey D'
                                 class='control buttonBase buttonEffects'>Defaults [D]
                         </button>
@@ -104,7 +103,7 @@
                 <div class='optionsRow flexRow'>
                     <div class='optionsCol flexCol' id='optionsColPrompts'>
 
-                        <h2>Prompts</h2>
+                        <h3>Prompts</h3>
                         <div class='sample' id='samplePrompt'>[sample prompt]</div>
 
                         <fieldset id='fieldsetShowPrompt' class='fieldsetRadio flexCol'>
@@ -156,7 +155,7 @@
                         </div>
                     </div>
                     <div class='optionsCol flexCol' id='optionsColAnswers'>
-                        <h2>Answers</h2>
+                        <h3>Answers</h3>
                         <div class='sample' id='sampleAnswer'>[sample answer]</div>
 
                         <fieldset id='fieldsetShowAnswer' class='fieldsetRadio flexCol'>
@@ -209,7 +208,7 @@
                         </div>
                     </div>
                     <div class='optionsCol flexCol fullWidth' id='optionsColGeneral'>
-                        <h2>General</h2>
+                        <h3>General</h3>
                         <div class='sample'></div>&nbsp;
                         <div class='optLabelPlusOption'>
                             <label for='optVolume' id='labelVolume' class='sliderLabel ui-widget'>Volume</label>
@@ -284,7 +283,7 @@
                     </div>
                     <div class='flexRow' id='editSubPanel'>
                         <div id='editMetaPanel' class='editColumn flexCol'>
-                            <h2>Meta</h2>
+                            <h3>Meta</h3>
                             <div class='editMetaItem'>
                                 <label for='editTitle'>
                                     <div class='editMetaItemLabel'>Title</div>
@@ -317,11 +316,11 @@
                             </div>
                         </div>
                         <div id='editItemsPanel' class="editColumn">
-                            <h2 id='editItemsHeading'>Items</h2>
+                            <h3 id='editItemsHeading'>Items</h3>
                             <div id='editItemsList' class='flexCol hideScrollbar'></div>
                         </div>
                         <div id='editRawPanel' class="editColumn">
-                            <h2>Raw Items</h2>
+                            <h3>Raw Items</h3>
                             <textarea id='editRaw'></textarea>
                         </div>
                     </div>
