@@ -4,208 +4,21 @@ body {
     --bg-color: #0d1033;
 }
 
-* {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-}
-
-#dropzoneContainer, #dropzone {
-    position: fixed;
-    display: none;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    z-index: 100;
-}
-
 #app {
+    font-family: 'Helvetica', 'Arial', sans-serif;
     background: var(--bg-color);
     color: #fff;
-    font-family: 'Helvetica', 'Arial', sans-serif;
-    margin: auto;
-    box-sizing: border-box;
-    width: 100vw;
-    height: 100vh;
-    gap: 20px;
-}
-
-/* basics */
-
-.flexRow {
-    display: flex;
-    flex-direction: row;
-    justify-content: start;
-}
-
-.flexRowCenter {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-.flexCol {
-    display: flex;
-    flex-direction: column;
-    justify-content: start;
-}
-
-.flexColCenter {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-#main {
-    padding: 6px;
-    box-sizing: border-box;
-    flex-grow: 1;
-}
-
-#footer {
-    color: #eee;
-    width: 100%;
-    font-size: 12px;
-    background: rgba(0, 0, 0, 0.35);
-    padding: 6px;
-    box-sizing: border-box;
-    flex-shrink: 0;
-    z-index: 30;
-    border-top: 1px solid #fff;
-}
-
-.panel {
-    overflow-y: scroll;
-    height: 100%;
-    width: 100%;
-}
-
-#header h1 {
-    font-size: 30px;
-    text-align: center;
-    border-bottom: 1px solid #fff;
-    padding-bottom: 15px;
-}
-
-a {
-    color: #0adcff;
-}
-
-.hide {
-    visibility: hidden;
-    display: none;
-}
-
-.swappable {
-    height: inherit;
-    width: inherit;
-}
-
-#header {
-    padding-top: 20px;
-    background: rgba(0, 0, 0, .25);
 }
 
 #header h1 {
     font-size: 40px;
 }
 
-.subtitlePanel {
-    text-align: center;
-    padding: 10px 0;
-}
-
-hr {
-    width: 100%;
-    border-bottom: 1px solid white;
-}
-
-.textDark {
-    color: #222;
-}
-
-.textDark a {
-    color: var(--bg-color);
-}
-
-#footerContent {
-    padding: 15px 10px;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    box-sizing: border-box;
-}
-
-.footerBlock {
-    display: flex;
-    flex-direction: row;
-    justify-content: end;
-}
-
-.footerBlock > div {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 20px;
-}
-
-.buttonFooter {
-    padding: 5px 10px;
-    margin-right: 10px;
-}
-
-/* Button base */
-
-.buttonBase {
-    background: none;
-    border: 1px solid #fff;
-    border-radius: 5px;
-    color: #fff;
-    min-height: 30px;
-    cursor: pointer;
-}
-
-.buttonBase.buttonDark {
-    color: #222;
-    border-color: #222;
-}
-
-.buttonEffects:hover {
-    background: #fff !important;
-    color: #111 !important;
-}
-
-.buttonEffects:active {
-    background: #aaa !important;
-    color: #111 !important;
-}
-
-.buttonEffects.buttonDark:hover {
-    background: #222 !important;
-    color: #fff !important;
-}
-
-.buttonEffects.buttonDark:active {
-    background: #555 !important;
-    color: #fff !important;
-}
-
-.buttonEffects:disabled {
-    color: #ddd !important;
-    border: 1px solid #ddd !important;
-    cursor: default !important;
-    filter: brightness(0.65) !important;
-}
-
-.buttonEffects:disabled:hover, .buttonEffects:disabled:active {
-    background: none !important;
-    color: #ddd !important;
-}
-
 #sourceContainer {
     margin-right: 15px;
 }
+
+/* Game */
 
 #nextMessage {
     font-style: italic;
@@ -214,96 +27,6 @@ hr {
     position: relative;
     top: 100%;
 }
-
-/* Scrollbar */
-
-.hideScrollbar {
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
-    scrollbar-width: none; /* Firefox */
-}
-
-.hideScrollbar::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
-}
-
-/* fixing jquery ui slider */
-
-.sliderContainer {
-    width: 248px;
-    background: #fff;
-    border-radius: 4px;
-    border: 1px solid #c5c5c5;
-}
-
-.ui-slider {
-    width: 208px;
-    border: none !important;
-}
-
-.ui-slider, .ui-slider .ui-slider-handle {
-    height: 28px;
-}
-
-.ui-slider .ui-slider-handle {
-    margin-left: -1px;
-    top: -1px;
-    line-height: 26px;
-    width: 40px;
-    text-align: center;
-    background: #023b1f;
-    color: white;
-}
-
-.ui-slider .ui-slider-handle:hover {
-    background: #056e3a !important;
-    color: white !important;
-}
-
-.ui-slider .ui-slider-handle.ui-state-active {
-    background: #056e3a !important;
-    color: white !important;
-    border-color: #067e43 !important;
-}
-
-/* ui-checkboxradio */
-
-.ui-checkboxradio-label {
-    background: #eee;
-    color: #111;
-}
-
-.ui-checkboxradio-label .ui-checkboxradio-icon {
-    border: 1px solid #aaa;
-}
-
-.ui-checkboxradio-label.ui-checkboxradio-checked {
-    background: #023b1f;
-    border-color: #067e43;
-    color: white;
-}
-
-.ui-checkboxradio-label:hover {
-    background: #ccc !important;
-    color: #222 !important;
-    border-color: #067e43 !important;
-}
-
-.ui-checkboxradio-label.ui-checkboxradio-checked:hover {
-    background: #143023 !important;
-    color: #fff !important;
-}
-
-.ui-checkboxradio-radio-label.ui-checkboxradio-checked .ui-icon, .ui-checkboxradio-radio-label.ui-checkboxradio-checked:hover .ui-icon {
-    width: 16px;
-    height: 16px;
-    /*border: none;*/
-    border-color: #fff;
-    background: #7c7c7c;
-}
-
-/* Particulars for this app */
-
-/* Game */
 
 .card {
     text-align: center;
@@ -326,7 +49,6 @@ hr {
 
 .card {
     text-align: center;
-    /*margin: 2vw 0 4vw 0;*/
 }
 
 #info {
@@ -366,7 +88,7 @@ hr {
     min-width: 10vw;
     margin: 10px;
     border-radius: 7px;
-    box-shadow: 5px 5px #000;
+    box-shadow: 5px 5px rgba(0, 0, 0, 1);
     font-size: 20px;
     font-weight: normal;
     padding: 10px;
@@ -538,7 +260,6 @@ input[disabled=""] {
 
 #editSubPanel > div {
     width: 30%;
-    /*   border: 1px solid #eee; */
     padding: 20px;
     box-sizing: border-box;
 }
