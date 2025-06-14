@@ -11,6 +11,8 @@ body {
     color: var(--text-color);
 }
 
+/* General */
+
 #header h1 {
     font-size: 40px;
 }
@@ -131,10 +133,20 @@ body {
     font-size: 14px;
 }
 
-#shareURL {
-    width: 30%;
+#shareURLInvalidNotice {
+    font-style: italic;
+    color: rgb(230, 183, 25);
+    text-align: center;
+}
+
+.shareURLItem {
+    width: 20%;
     overflow-x: scroll;
-    height: 30px;
+    height: 40px;
+    font-size: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 #shareContent button {

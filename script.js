@@ -71,14 +71,7 @@ class App {
 
     handleGeneralChange = () => {
         $("#deckTitle").text(app.deck.title);
-        let pageTitle;
-        if (app.deck.title.length > 0) {
-            pageTitle = app.deck.title;
-        } else {
-            pageTitle = 'Untitled Deck';
-        }
-        document.title = `${pageTitle} - Flashcarder`;
-
+        View.updateDocumentTitle();
         View.updateSourceView();
         View.updateCardView();
         View.updateShareURLView();
@@ -1107,11 +1100,33 @@ class View {
         $('#copyrightYear').text(new Date().getFullYear());
     }
 
-    static updateShareURLView = () => {
-        if (lio.shareURLIsValid()) {
-            $("#shareURL").val(lio.updateShareURL());
+    static formatDocumentTitle = () => {
+        if (app.deck.title.length > 0) {
+            return `${app.deck.title} - Flashcarder`;
         } else {
-            $('#shareURL').val("[Too much data for URL encoding. Edit data or download instead.]")
+            return 'Untitled Deck - Flashcarder';
+        }
+    }
+
+    static updateDocumentTitle = () => {
+        let pageTitle = View.formatDocumentTitle();
+        document.title = `${pageTitle}`;
+    }
+
+    static updateShareURLView = () => {
+        let title;
+        if (lio.shareURLIsValid()) {
+            $('#shareURL').removeClass('hide');
+            $('#shareURLInvalidNotice').addClass('hide');
+
+            title = View.formatDocumentTitle();
+            $("#shareURL").text(title);
+            $("#shareURL").attr('title', title);
+            $("#shareURL").attr('href', lio.updateShareURL());
+
+        } else {
+            $('#shareURL').addClass('hide');
+            $('#shareURLInvalidNotice').removeClass('hide');
         }
     };
 
