@@ -71,6 +71,7 @@ class App {
 
     handleGeneralChange = () => {
         $("#deckTitle").text(app.deck.title);
+        document.title = `${app.deck.title} - Flashcarder`;
         View.updateSourceView();
         View.updateCardView();
         View.updateShareURLView();
