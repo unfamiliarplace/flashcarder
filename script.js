@@ -1225,7 +1225,7 @@ const unpackLinkData = (data) => {
 }
 
 const copyShareURL = () => {
-    copyToast = Copy.toast(copyToast, $("#shareURL").val(), 'Copied share URL!');
+    copyToast = Copy.toast(copyToast, lio.shareURL, 'Copied share URL!');
 };
 
 const updateVoiceOptions = (selectLanguage, selectVoice, language) => {
