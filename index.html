@@ -250,10 +250,13 @@
             <div id='editContent' class='panelContent'>
                 <div id="shareWrap" class="subpanelContent flexCol">
                     <div id='shareContent' class='flexRowCenter'>
-                        <div id='shareURLLabel'>Link</div>
-                        <a id="shareURL" class="shareURLItem flexCol" href="https://g.sawczak.com/flashcarder" title="French Test Deck">French Test Deck</a>
-                        <p id="shareURLInvalidNotice" class="shareURLItem hide">Too much data for URL encoding.<br>Edit data or download instead.</p>
-<!--                        <input id="shareURL" type="text" readonly value=""/>-->
+                        <div id="shareURLContainer" class="flexRow">
+                            <div id='shareURLLabel' class="flexCol flexColCenter">Link</div>
+                            <a id="shareURL" class="shareURLItem flexCol flexColCenter" href="https://g.sawczak.com/flashcarder" title="French Test Deck">French Test Deck</a>
+                            <p id="shareURLInvalidNotice" class="shareURLItem flexCol flexColCenter hide">Too much data for URL encoding.<br>Edit data or download instead.</p>
+                            <!--                        <input id="shareURL" type="text" readonly value=""/>-->
+
+                        </div>
                         <button id="btnCopyShareURL" class="buttonBase buttonEffects"
                                 title="Copy the share URL to the clipboard">Copy URL
                         </button>
