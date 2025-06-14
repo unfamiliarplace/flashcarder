@@ -71,7 +71,14 @@ class App {
 
     handleGeneralChange = () => {
         $("#deckTitle").text(app.deck.title);
-        document.title = `${app.deck.title} - Flashcarder`;
+        let pageTitle;
+        if (app.deck.title.length > 0) {
+            pageTitle = app.deck.title;
+        } else {
+            pageTitle = 'Untitled Deck';
+        }
+        document.title = `${pageTitle} - Flashcarder`;
+
         View.updateSourceView();
         View.updateCardView();
         View.updateShareURLView();
