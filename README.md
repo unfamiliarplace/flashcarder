@@ -4,6 +4,7 @@
 
 ## TODO
 
+*(Notes from from 2024-05-02)*
 * Hide after reveal
 * Merge next/reveal
 * Time/increments?
